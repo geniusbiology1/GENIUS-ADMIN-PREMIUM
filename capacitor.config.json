@@ -1,0 +1,13 @@
+{
+  "appId": "com.geniusbiology.admin",
+  "appName": "GENIUS ADMIN PREMIUM",
+  "webDir": "dist",
+  "android": { "allowMixedContent": false, "backgroundColor": "#0B0D12" },
+  "server": { "androidScheme": "https" },
+  "plugins": {
+    "StatusBar": { "overlaysWebView": true, "style": "DARK", "backgroundColor": "#0B0D12" },
+    "Keyboard": { "resize": "body", "style": "DARK", "resizeOnFullScreen": true },
+    "SplashScreen": { "launchAutoHide": true, "backgroundColor": "#0B0D12", "showSpinner": false },
+    "LocalNotifications": { "smallIcon": "ic_stat_genius", "iconColor": "#FF0000" }
+  }
+}
