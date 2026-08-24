@@ -18,7 +18,23 @@ import {
 } from '../screens/index.js';
 import '../style.css';
 
+// مكون Modal بسيط لمنع خطأ ReferenceError
+function Modal({ title, close, children }) {
+  return (
+    <div className="modalBackdrop" onClick={close}>
+      <div className="modalContent" onClick={e => e.stopPropagation()}>
+        <div className="modalHeader">
+          <h3>{title}</h3>
+          <button className="iconBtn" onClick={close}><I.X /></button>
+        </div>
+        <div className="modalBody">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 const NAV=[['dashboard','الرئيسية',I.LayoutDashboard],['students','الطلاب',I.Users],['groups','المجموعات',I.Layers3],['schedule','الجدول',I.CalendarDays],['finance','المالية',I.Wallet],['reports','التقارير',I.BarChart3],['settings','الإعدادات',I.Settings]];
+
 function App(){
  const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
  const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);window.__gaToast=window.setTimeout(()=>setToast(''),2600)},[]);
@@ -81,3 +97,5 @@ function App(){
  </div>
 }
 
+// التصدير الافتراضي المباشر لحل المشكلة نهائياً
+export default App;
