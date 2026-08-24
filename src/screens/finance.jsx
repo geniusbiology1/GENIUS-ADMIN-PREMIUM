@@ -14,4 +14,3 @@ export function Notifications(p){const ruleCount=evaluateRules(p.data).length;co
 
 
 export function Activity(p){const list=[...p.data.activities].sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,100);return <Screen title="سجل العمليات"><div className="list">{list.map(a=><Row key={a.id} title={a.action} sub={`${new Date(a.at).toLocaleString('ar-EG')} • ${a.refId||''}`}/>)}</div></Screen>}
-
