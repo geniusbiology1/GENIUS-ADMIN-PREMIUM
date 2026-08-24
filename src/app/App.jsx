@@ -16,7 +16,7 @@ import {
  AttendanceModal,Scanner,Student360,StudentCard,StudentForm,GroupForm,SessionForm,PaymentForm,ExpenseForm,ExamForm,ExamView,BookForm,BookView,
  Finance,Reports,Notifications,Activity,Settings,PinForm,DriveBackup,YearForm,DictForm,Archive,PromotionForm
 } from '../screens/index.js';
-import './style.css';
+import '../style.css';
 
 const NAV=[['dashboard','الرئيسية',I.LayoutDashboard],['students','الطلاب',I.Users],['groups','المجموعات',I.Layers3],['schedule','الجدول',I.CalendarDays],['finance','المالية',I.Wallet],['reports','التقارير',I.BarChart3],['settings','الإعدادات',I.Settings]];
 function App(){
