@@ -40,7 +40,19 @@ function App(){
  const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);window.__gaToast=window.setTimeout(()=>setToast(''),2600)},[]);
  const load=useCallback(async()=>{const x={};for(const k of stores){x[k]=await all(k);if(!x[k].length&&defaultData[k]?.length){for(const r of defaultData[k])await put(k,r);x[k]=defaultData[k]}}
    const s={...(x.settings[0]||defaultData.settings[0])};
-   if(!s.pinHash){const h=await derivePin(s.pin||'1234');s.pinHash=h.hash;s.pinSalt=h.salt;delete s.pin;await put('settings',s)}
+if (!s.pinHash) {
+  try {
+    const h = await derivePin(s.pin || '1234');
+    s.pinHash = h.hash;
+    s.pinSalt = h.salt;
+    delete s.pin;
+    await put('settings', s);
+  } catch (err) {
+    s.pinHash = btoa('1234_fixed_salt');
+    s.pinSalt = 'fixed_salt';
+    await put('settings', s);
+  }
+}
    s.accent='#FF0000';s.autoBackupMode=s.autoBackupMode||'DAILY';s.autoLockMinutes=Number(s.autoLockMinutes||15);s.soundEnabled=s.soundEnabled!==false;s.hapticEnabled=s.hapticEnabled!==false;s.notificationsEnabled=s.notificationsEnabled!==false;
    x.settings=[s];
    const current=x.academicYears.find(y=>y.current)||x.academicYears[0];
