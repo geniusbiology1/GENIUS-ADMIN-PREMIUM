@@ -29,7 +29,13 @@ jobs:
 
       - run: npm run build
 
-      - run: npx cap sync android
+      # إضافة منصة الأندرويد إن لم تكن موجودة، ثم المزامنة
+      - name: Add & Sync Capacitor Android
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          npx cap sync android
 
       - run: chmod +x android/gradlew
 
