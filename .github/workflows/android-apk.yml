@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: android-actions/setup-android@v3
 
@@ -29,7 +29,6 @@ jobs:
 
       - run: npm run build
 
-      # إضافة منصة الأندرويد إن لم تكن موجودة، ثم المزامنة
       - name: Add & Sync Capacitor Android
         run: |
           if [ ! -d "android" ]; then
