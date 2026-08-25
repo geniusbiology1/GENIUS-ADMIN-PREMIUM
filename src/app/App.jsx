@@ -11,56 +11,36 @@ import {derivePin} from '../services/security.js';
 import {useAutoLock} from '../hooks/useAutoLock.js';
 import {syncRuleNotifications} from '../services/notifications/index.js';
 import {defaultData} from '../seed.js';
-import {
- Login,Dashboard,Students,Groups,Schedule,
- AttendanceModal,Scanner,Student360,StudentCard,StudentForm,GroupForm,SessionForm,PaymentForm,ExpenseForm,ExamForm,ExamView,BookForm,BookView,
- Finance,Reports,Notifications,Activity,Settings,PinForm,DriveBackup,YearForm,DictForm,Archive,PromotionForm
-} from '../screens/index.js';
+import {Login,Dashboard,Students,Groups,Schedule,AttendanceModal,Scanner,Student360,StudentCard,StudentForm,GroupForm,SessionForm,PaymentForm,ExpenseForm,ExamForm,ExamView,BookForm,BookView,Finance,Reports,Notifications,Activity,Settings,PinForm,DriveBackup,YearForm,DictForm,Archive,PromotionForm} from '../screens/index.js';
 import '../style.css';
 
-// مكون Modal بسيط لمنع خطأ ReferenceError
+export class ErrorBoundary extends React.Component {
+  constructor(p){super(p);this.state={hasError:false,error:null}}
+  static getDerivedStateFromError(e){return {hasError:true,error:e}}
+  componentDidCatch(e,i){console.error('UI Error',e,i)}
+  retry=()=>this.setState({hasError:false,error:null});
+  render(){
+    if(!this.state.hasError)return this.props.children;
+    return <div className="fatal" dir="rtl"><div className="fatalCard"><div className="fatalIcon"><I.ShieldAlert size={28}/></div><h1>GENIUS ADMIN استعاد نفسه</h1><p>حدث خطأ غير متوقع في الواجهة.</p><div className="actions"><button className="btn" onClick={this.retry}><I.RefreshCw size={15}/> إعادة المحاولة</button><button className="btn secondary" onClick={()=>window.location.reload()}><I.RotateCcw size={15}/> إعادة التشغيل</button></div></div></div>;
+  }
+}
+
 function Modal({ title, close, children }) {
-  return (
-    <div className="modalBackdrop" onClick={close}>
-      <div className="modalContent" onClick={e => e.stopPropagation()}>
-        <div className="modalHeader">
-          <h3>{title}</h3>
-          <button className="iconBtn" onClick={close}><I.X /></button>
-        </div>
-        <div className="modalBody">{children}</div>
-      </div>
-    </div>
-  );
+  return <div className="modalBackdrop" onClick={close}><div className="modalContent" onClick={e=>e.stopPropagation()}><div className="modalHeader"><h3>{title}</h3><button className="iconBtn" onClick={close}><I.X/></button></div><div className="modalBody">{children}</div></div></div>;
 }
 
 const NAV=[['dashboard','الرئيسية',I.LayoutDashboard],['students','الطلاب',I.Users],['groups','المجموعات',I.Layers3],['schedule','الجدول',I.CalendarDays],['finance','المالية',I.Wallet],['reports','التقارير',I.BarChart3],['settings','الإعدادات',I.Settings]];
 
-function App(){
+function MainApp(){
  const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
  const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);window.__gaToast=window.setTimeout(()=>setToast(''),2600)},[]);
  const load=useCallback(async()=>{const x={};for(const k of stores){x[k]=await all(k);if(!x[k].length&&defaultData[k]?.length){for(const r of defaultData[k])await put(k,r);x[k]=defaultData[k]}}
    const s={...(x.settings[0]||defaultData.settings[0])};
-if (!s.pinHash) {
-  try {
-    const h = await derivePin(s.pin || '1234');
-    s.pinHash = h.hash;
-    s.pinSalt = h.salt;
-    delete s.pin;
-    await put('settings', s);
-  } catch (err) {
-    s.pinHash = btoa('1234_fixed_salt');
-    s.pinSalt = 'fixed_salt';
-    await put('settings', s);
-  }
-}
+   if (!s.pinHash) {try{const h=await derivePin(s.pin||'1234');s.pinHash=h.hash;s.pinSalt=h.salt;delete s.pin;await put('settings',s)}catch{s.pinHash=btoa('1234_fixed_salt');s.pinSalt='fixed_salt';await put('settings',s)}}
    s.accent='#FF0000';s.autoBackupMode=s.autoBackupMode||'DAILY';s.autoLockMinutes=Number(s.autoLockMinutes||15);s.soundEnabled=s.soundEnabled!==false;s.hapticEnabled=s.hapticEnabled!==false;s.notificationsEnabled=s.notificationsEnabled!==false;
-   x.settings=[s];
-   const current=x.academicYears.find(y=>y.current)||x.academicYears[0];
-   const month=today().slice(0,7);
-   const createdCharges=await createMonthlyCharges(x,current?.id,month);
-   if(createdCharges.length)x.payments.push(...createdCharges);
-   x.groups=x.groups.map(g=>({...g,academicYearId:g.academicYearId||current?.id}));
-   for(const g of x.groups)await put('groups',g);
+   x.settings=[s];const current=x.academicYears.find(y=>y.current)||x.academicYears[0];const month=today().slice(0,7);
+   const createdCharges=await createMonthlyCharges(x,current?.id,month);if(createdCharges.length)x.payments.push(...createdCharges);
+   x.groups=x.groups.map(g=>({...g,academicYearId:g.academicYearId||current?.id}));for(const g of x.groups)await put('groups',g);
    setData(x);setYearId(current?.id||'');setTheme(s.theme||'dark');
  },[]);
  useEffect(()=>{load().catch(e=>{console.error(e);notify('تعذر تحميل قاعدة البيانات')})},[load,notify]);
@@ -81,11 +61,10 @@ if (!s.pinHash) {
  const attendanceRate=useCallback(s=>{const a=data.attendance.filter(x=>active(x)&&x.studentId===s.id);return a.length?Math.round(a.filter(x=>x.status==='حاضر'||x.status==='متأخر').length/a.length*100):0},[data]);
  const avg=useCallback(s=>{const a=data.grades.filter(x=>active(x)&&x.studentId===s.id);return a.length?Math.round(a.reduce((z,x)=>z+(Number(x.score||0)/Number(x.maxScore||1))*100,0)/a.length):0},[data]);
  const exportXlsx=useCallback((name,sheets)=>{const wb=XLSX.utils.book_new();for(const [n,rows] of Object.entries(sheets)){const ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,n.slice(0,31))}XLSX.writeFile(wb,name)},[]);
- const importStudents=useCallback(async file=>{try{const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{defval:''});let ok=0,bad=0;for(const r of rows){const name=String(r['الاسم']||r['اسم الطالب']||r.name||'').trim();if(!name){bad++;continue}const groupName=String(r['المجموعة']||r.group||'').trim();const g=groups.find(x=>x.name===groupName)||groups[0];const rawCode=String(r['GENIUS ID']||r['ID']||r.code||'').trim();const code=rawCode||`${data.academicYears.find(y=>y.id===yearId)?.shortCode||'27'}${String(Date.now()+ok).slice(-4)}`;if(data.students.some(x=>active(x)&&x.code===code)||uniqueCodes([...data.students.filter(x=>active(x)),{id:`import_${ok}`,code}]).length){bad++;continue}await write('students',{id:uid2('st'),code,name,grade:String(r['الصف']||r.grade||dict('grades')[0]||''),academicYearId:yearId,groupId:g?.id||'',branchId:g?.branchId||'',status:'نشط',studentPhone:String(r['هاتف الطالب']||r.studentPhone||''),parentName:String(r['ولي الأمر']||r.parentName||''),parentPhone:String(r['هاتف ولي الأمر']||r.parentPhone||''),joinDate:today(),price:Number(r['السعر']||r.price||g?.price||0),discountType:'NONE',discountValue:0,level:'',notes:String(r['ملاحظات']||r.notes||'')},'استيراد طالب من Excel');ok++}notify(`تم استيراد ${ok} طالب — أخطاء/تكرار: ${bad}`)}catch(e){console.error(e);notify('تعذر قراءة ملف Excel')}} ,[data,groups,yearId,write,notify,dict]);
- const createBackupFile=useCallback(async({share=false,silent=false}={})=>{const payload=await makeBackupEnvelope(await snapshot(),{version:'5.2.0',academicYearId:yearId});const json=JSON.stringify(payload,null,2);const name=backupFilename();const uri=await writeTextFile(name,json);if(share){try{await shareFile(uri,'GENIUS ADMIN Backup')}catch{}}const meta={id:'last',createdAt:payload.createdAt,fileName:name,schemaVersion:5,checksum:payload.checksum};await put('backupMeta',meta);setData(x=>({...x,backupMeta:[meta]}));if(!silent)notify('تم إنشاء Backup كامل وآمن');return {payload,name,uri}} ,[notify,yearId]);
- const backup=useCallback(async()=>{try{const result=await createBackupFile({share:true});if(result?.uri)return; }catch(e){console.error(e);try{const payload=await makeBackupEnvelope(await snapshot(),{version:'5.2.0',academicYearId:yearId});const json=JSON.stringify(payload,null,2);const name=backupFilename();const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);await put('backupMeta',{id:'last',createdAt:payload.createdAt,fileName:name,schemaVersion:5,checksum:payload.checksum});notify('تم إنشاء Backup آمن');}catch(err){console.error(err);notify('فشل إنشاء النسخة الاحتياطية')}}},[createBackupFile,notify,yearId]);
-
- const restoreFile=useCallback(async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(!confirm('سيتم إنشاء نقطة أمان ثم استبدال البيانات الحالية بالنسخة المختارة. هل تريد المتابعة؟'))return;try{const raw=JSON.parse(await file.text());if(!validBackup(raw))throw new Error('INVALID_BACKUP_SHAPE');await verifyBackupEnvelope(raw);await createBackupFile({share:false,silent:true});await restore(raw);location.reload()}catch(err){console.error(err);notify('ملف Backup غير صالح أو تالف — لم يتم تغيير بياناتك')}},[notify]);
+ const importStudents=useCallback(async file=>{try{const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{defval:''});let ok=0,bad=0;for(const r of rows){const name=String(r['الاسم']||r['اسم الطالب']||r.name||'').trim();if(!name){bad++;continue}const groupName=String(r['المجموعة']||r.group||'').trim();const g=groups.find(x=>x.name===groupName)||groups[0];const rawCode=String(r['GENIUS ID']||r['ID']||r.code||'').trim();const code=rawCode||`${data.academicYears.find(y=>y.id===yearId)?.shortCode||'27'}${String(Date.now()+ok).slice(-4)}`;if(data.students.some(x=>active(x)&&x.code===code)||uniqueCodes([...data.students.filter(x=>active(x)),{id:`import_${ok}`,code}]).length){bad++;continue}await write('students',{id:uid2('st'),code,name,grade:String(r['الصف']||r.grade||dict('grades')[0]||''),academicYearId:yearId,groupId:g?.id||'',branchId:g?.branchId||'',status:'نشط',studentPhone:String(r['هاتف الطالب']||r.studentPhone||''),parentName:String(r['ولي الأمر']||r.parentName||''),parentPhone:String(r['هاتف ولي الأمر']||r.parentPhone||''),joinDate:today(),price:Number(r['السعر']||r.price||g?.price||0),discountType:'NONE',discountValue:0,level:'',notes:String(r['ملاحظات']||r.notes||'')},'استيراد طالب من Excel');ok++}notify(`تم استيراد ${ok} طالب — أخطاء/تكرار: ${bad}`)}catch(e){console.error(e);notify('تعذر قراءة ملف Excel')}},[data,groups,yearId,write,notify,dict]);
+ const createBackupFile=useCallback(async({share=false,silent=false}={})=>{const payload=await makeBackupEnvelope(await snapshot(),{version:'5.2.0',academicYearId:yearId});const json=JSON.stringify(payload,null,2);const name=backupFilename();const uri=await writeTextFile(name,json);if(share){try{await shareFile(uri,'GENIUS ADMIN Backup')}catch{}}const meta={id:'last',createdAt:payload.createdAt,fileName:name,schemaVersion:5,checksum:payload.checksum};await put('backupMeta',meta);setData(x=>({...x,backupMeta:[meta]}));if(!silent)notify('تم إنشاء Backup كامل وآمن');return {payload,name,uri}},[notify,yearId]);
+ const backup=useCallback(async()=>{try{const result=await createBackupFile({share:true});if(result?.uri)return;}catch(e){console.error(e);try{const payload=await makeBackupEnvelope(await snapshot(),{version:'5.2.0',academicYearId:yearId});const json=JSON.stringify(payload,null,2);const name=backupFilename();const blob=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);await put('backupMeta',{id:'last',createdAt:payload.createdAt,fileName:name,schemaVersion:5,checksum:payload.checksum});notify('تم إنشاء Backup آمن');}catch(err){console.error(err);notify('فشل إنشاء النسخة الاحتياطية')}}},[createBackupFile,notify,yearId]);
+ const restoreFile=useCallback(async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(!confirm('سيتم إنشاء نقطة أمان ثم استبدال البيانات الحالية بالنسخة المختارة. هل تريد المتابعة؟'))return;try{const raw=JSON.parse(await file.text());if(!validBackup(raw))throw new Error('INVALID_BACKUP_SHAPE');await verifyBackupEnvelope(raw);await createBackupFile({share:false,silent:true});await restore(raw);location.reload()}catch(err){console.error(err);notify('ملف Backup غير صالح أو تالف — لم يتم تغيير بياناتك')}},[notify,createBackupFile]);
  useEffect(()=>{if(!data||locked||settings.autoBackupMode==='OFF')return;const last=data.backupMeta?.find(x=>x.id==='last');const age=last?.createdAt?Date.now()-new Date(last.createdAt).getTime():Infinity;const threshold=settings.autoBackupMode==='WEEKLY'?7*86400000:86400000;if(age<threshold)return;createBackupFile({share:false,silent:true}).catch(()=>{})},[data,locked,settings.autoBackupMode,createBackupFile]);
  const whatsapp=useCallback((phone,text)=>{const n=egPhone(phone);if(!n)return notify('لا يوجد رقم واتساب محفوظ');window.open(`https://wa.me/${n}?text=${encodeURIComponent(text||'')}`,'_blank','noopener');},[notify]);
  const scheduleSessions=useCallback(async(days=90)=>{let made=0;const start=new Date();start.setHours(0,0,0,0);for(const g of groups){for(let i=0;i<=days;i++){const dt=new Date(start);dt.setDate(dt.getDate()+i);const iso=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;const day=dt.toLocaleDateString('ar-EG',{weekday:'long'});for(const slot of g.schedule||[]){if(slot.day!==day)continue;const exists=data.sessions.some(s=>active(s)&&s.groupId===g.id&&s.date===iso&&s.timeStart===slot.start);if(!exists){await write('sessions',{id:uid2('ses'),groupId:g.id,academicYearId:g.academicYearId,date:iso,day,timeStart:slot.start,timeEnd:slot.end,status:'UPCOMING'},'توليد حصة تلقائيًا');made++}}}}notify(`تم توليد ${made} حصة`);await buzz()},[data,groups,write,notify,buzz]);
@@ -97,8 +76,8 @@ if (!s.pinHash) {
 
  if(!data)return <div className="splash"><img src="/branding/genius-admin-logo.png" alt="GENIUS ADMIN PREMIUM"/><b>GENIUS ADMIN PREMIUM</b><small>Offline First • جاري تجهيز النظام...</small></div>;
  if(locked)return <Login settings={settings} onOk={()=>{sessionStorage.setItem('genius_auth','1');setLocked(false)}}/>;
- const go=useCallback(id=>setPage(id),[]);
- const pageProps=useMemo(()=>({data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go}),[data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,selected,query,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go]);
+ const go=id=>setPage(id);
+ const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
  return <div className={`app ${theme}`} style={{'--accent':settings.accent||'#FF0000'}}>
   <header className="topbar"><button className="iconBtn" onClick={()=>setModal('menu')}><I.Menu/></button><div className="brand"><img src="/branding/admin-icon.png" alt="GENIUS ADMIN"/><div><strong>GENIUS ADMIN</strong><small>GENIUS BIOLOGY • PREMIUM</small></div></div><div className="globalSearch"><I.Search size={17}/><input value={globalQuery} onChange={e=>setGlobalQuery(e.target.value)} placeholder="بحث شامل..."/>{globalQuery&&<div className="globalResults">{globalResults.map(r=><button key={`${r.store}_${r.id}`} onClick={()=>{setGlobalQuery("");if(r.store==="students"){setPage("students");setQuery(r.title)}else if(r.store==="groups"){setPage("groups");setQuery(r.title)}else setPage(r.store==="expenses"||r.store==="payments"?"finance":"reports")}}><b>{r.title}</b><small>{r.store} {r.subtitle}</small></button>)}{!globalResults.length&&<small className="globalEmpty">لا توجد نتائج</small>}</div>}</div><select className="yearSelect branchSelect" value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="ALL">كل الفروع</option>{data.branches.filter(active).map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select><select className="yearSelect" value={yearId} onChange={e=>setYearId(e.target.value)}>{data.academicYears.filter(active).map(y=><option key={y.id} value={y.id}>{y.name}</option>)}</select><button className="iconBtn notifyBtn" onClick={()=>go('notifications')}><I.Bell/>{data.notifications.filter(n=>active(n)&&!n.read).length>0&&<i>{data.notifications.filter(n=>active(n)&&!n.read).length}</i>}</button><button className="iconBtn" onClick={()=>setTheme(x=>x==='dark'?'light':'dark')}><I.SunMoon/></button></header>
   <main>{page==='dashboard'&&<Dashboard {...pageProps}/>} {page==='students'&&<Students {...pageProps}/>} {page==='groups'&&<Groups {...pageProps}/>} {page==='schedule'&&<Schedule {...pageProps}/>} {page==='finance'&&<Finance {...pageProps}/>} {page==='reports'&&<Reports {...pageProps}/>} {page==='notifications'&&<Notifications {...pageProps}/>} {page==='settings'&&<Settings {...pageProps}/>} {page==='archive'&&<Archive {...pageProps}/>} {page==='activity'&&<Activity {...pageProps}/>}</main>
@@ -109,5 +88,10 @@ if (!s.pinHash) {
  </div>
 }
 
-// التصدير الافتراضي المباشر لحل المشكلة نهائياً
-export default App;
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <MainApp />
+    </ErrorBoundary>
+  );
+}
