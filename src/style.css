@@ -1,142 +1,466 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
 
-/* 1. ضبط الخطوط والوضع الداكن */
-:root {
-  --bg: #090b10;
-  --panel: #11151d;
-  --panel2: #171c25;
-  --line: #252c39;
-  --accent: #ff0000;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+/* ===================================================================
+   1) الأساسيات: خطوط، ألوان، وضع داكن/فاتح
+=================================================================== */
+:root{
+  --bg:#0a0c11;
+  --panel:#12151d;
+  --panel2:#171b25;
+  --card:#141822;
+  --line:#242a37;
+  --line-soft:#1b202c;
+  --accent:#ff3b3b;
+  --accent-dim:#ff3b3b22;
+  --accent-strong:#ff1f1f;
+  --text:#f4f6f9;
+  --muted:#8b95a7;
+  --muted-2:#5f6a7d;
+  --success:#22c55e;
+  --warning:#f59e0b;
+  --danger:#ef4444;
+  --radius:16px;
+  --radius-sm:10px;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);
 }
 
-* {
-  box-sizing: border-box !important;
-  font-family: 'Cairo', sans-serif !important;
-  -webkit-tap-highlight-color: transparent;
+.app.light{
+  --bg:#f4f5f8;
+  --panel:#ffffff;
+  --panel2:#f0f1f5;
+  --card:#ffffff;
+  --line:#e4e6ec;
+  --line-soft:#edeef2;
+  --text:#141822;
+  --muted:#6b7280;
+  --muted-2:#98a0ad;
+  --shadow:0 8px 20px rgba(20,24,34,.08);
 }
 
-html, body, #root {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: var(--bg) !important;
-  color: var(--text) !important;
-  direction: rtl !important;
-  overflow: hidden;
+*{box-sizing:border-box!important;font-family:'Cairo',sans-serif!important;-webkit-tap-highlight-color:transparent;}
+
+html,body,#root{
+  width:100%;height:100%;margin:0;padding:0;
+  background:var(--bg)!important;color:var(--text)!important;
+  direction:rtl!important;overflow:hidden;
 }
 
-/* 2. إصلاح الهيكل العام */
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+h1,h2,h3,h4{margin:0;font-weight:800;}
+p,small{margin:0;color:var(--muted);}
+b{font-weight:700;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;}
+
+/* ===================================================================
+   2) هيكل التطبيق العام
+=================================================================== */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;position:relative;}
+
+.mainContainer{
+  flex:1;overflow-y:auto!important;-webkit-overflow-scrolling:touch;
+  padding:14px 14px calc(88px + var(--safe-bottom))!important;
 }
 
-main {
-  flex: 1;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
-  padding: 12px 12px calc(80px + var(--safe-bottom)) !important;
+/* ===================================================================
+   3) الشريط العلوي (Topbar)
+=================================================================== */
+.topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:calc(10px + var(--safe-top)) 14px 10px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;flex-wrap:wrap;
 }
 
-/* 3. منع تداخل الأزرار مع خانات الإدخال والـ PIN */
-div, form, section {
-  position: relative;
+.brand{display:flex;align-items:center;gap:8px;margin-inline-end:4px;}
+.brandIcon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(145deg,var(--accent),var(--accent-strong));
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  box-shadow:0 4px 12px var(--accent-dim);flex-shrink:0;
+}
+.brandTitle{display:flex;flex-direction:column;line-height:1.25;}
+.brandTitle strong{font-size:14px;font-weight:800;letter-spacing:.3px;}
+.brandTitle small{font-size:9px;color:var(--muted-2);letter-spacing:1px;}
+
+.globalSearch{
+  position:relative;flex:1 1 200px;min-width:140px;
+  display:flex;align-items:center;
+}
+.globalSearch .searchIcon{position:absolute;right:12px;color:var(--muted-2);pointer-events:none;}
+.globalSearch input{
+  width:100%!important;height:38px!important;margin:0!important;
+  background:var(--panel2)!important;border:1px solid var(--line)!important;
+  border-radius:999px!important;padding:0 40px 0 14px!important;
+  font-size:13px!important;color:var(--text)!important;
+}
+.globalSearch input:focus{border-color:var(--accent)!important;outline:none;}
+.globalResults{
+  position:absolute;top:44px;right:0;left:0;z-index:50;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);max-height:300px;overflow-y:auto;padding:6px;
+}
+.globalResults button{
+  width:100%;text-align:right;background:none!important;border:none!important;
+  padding:8px 10px!important;border-radius:8px!important;display:flex;flex-direction:column;gap:2px;
+  color:var(--text)!important;
+}
+.globalResults button:hover{background:var(--panel2)!important;}
+.globalResults small{color:var(--muted-2);font-size:11px;}
+.globalEmpty{display:block;padding:10px;text-align:center;}
+
+.topSelects{display:flex;gap:8px;}
+.yearSelect{
+  height:38px!important;margin:0!important;width:auto!important;min-width:90px;
+  background:var(--panel2)!important;border:1px solid var(--line)!important;
+  border-radius:999px!important;font-size:12px!important;padding:0 12px!important;
 }
 
-input:not([type="checkbox"]):not([type="radio"]), 
-select, 
-textarea {
-  position: static !important;
-  display: block !important;
-  width: 100% !important;
-  height: 42px !important;
-  background: var(--panel2) !important;
-  border: 1px solid var(--line) !important;
-  color: #fff !important;
-  border-radius: 10px !important;
-  padding: 8px 12px !important;
-  font-size: 13px !important;
-  margin-top: 4px !important;
-  margin-bottom: 8px !important;
+.topActions{display:flex;align-items:center;gap:6px;margin-inline-start:auto;}
+.iconBtn{
+  width:38px;height:38px;border-radius:12px!important;
+  background:var(--panel2)!important;border:1px solid var(--line)!important;
+  display:flex;align-items:center;justify-content:center;color:var(--text)!important;
+  flex-shrink:0;padding:0!important;
+}
+.iconBtn:active{transform:scale(.94);}
+.notifyBtn{position:relative;}
+.badge{
+  position:absolute;top:-4px;left:-4px;background:var(--accent);color:#fff;
+  font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;font-style:normal;padding:0 3px;
 }
 
-textarea {
-  height: auto !important;
-  min-height: 80px !important;
+/* ===================================================================
+   4) الشاشة العامة / الأقسام
+=================================================================== */
+.screen{display:flex;flex-direction:column;gap:16px;}
+.screenHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.screenHead h2{font-size:19px;}
+
+.section{display:flex;flex-direction:column;gap:10px;}
+.section h3{font-size:14px;color:var(--muted);font-weight:700;}
+
+/* ===================================================================
+   5) الهيرو (لوحة الترحيب بالرئيسية)
+=================================================================== */
+.hero{
+  background:linear-gradient(135deg,var(--panel) 0%,var(--panel2) 100%);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 100% 0%,var(--accent-dim),transparent 60%);
+  pointer-events:none;
+}
+.hero small{color:var(--muted-2);font-size:11px;}
+.hero h1{font-size:20px;margin-top:2px;}
+.hero p{font-size:13px;margin-top:4px;}
+.hero span{
+  align-self:flex-start;margin-top:10px;font-size:10px;font-weight:700;letter-spacing:1px;
+  color:var(--success);background:#22c55e1a;border:1px solid #22c55e33;
+  padding:4px 10px;border-radius:999px;
+}
+.hero .heroLogo,.hero .heroTeacher{display:none;}
+
+/* ===================================================================
+   6) الإحصائيات (Stats)
+=================================================================== */
+.stats{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;
+}
+.stat b{font-size:18px;font-weight:800;}
+.stat small{font-size:11px;color:var(--muted);}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.mini .stat{padding:8px;background:var(--panel2);}
+
+/* ===================================================================
+   7) الإجراءات السريعة (Quick actions) + قائمة النظام (menuGrid)
+=================================================================== */
+.quick,.menuGrid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+}
+.quick button,.menuItem{
+  background:var(--card)!important;border:1px solid var(--line)!important;
+  border-radius:var(--radius-sm)!important;padding:14px 6px!important;
+  display:flex!important;flex-direction:column;align-items:center;gap:8px;
+  color:var(--text)!important;font-size:11px!important;text-align:center;
+}
+.quick button svg,.menuItem svg{color:var(--accent);}
+.quick button:active,.menuItem:active{background:var(--panel2)!important;transform:scale(.97);}
+
+/* ===================================================================
+   8) البطاقات / القوائم / الصفوف
+=================================================================== */
+.list{display:flex;flex-direction:column;gap:10px;}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.card.interactive{cursor:pointer;}
+.card.interactive:active{background:var(--panel2);}
+.card h3{font-size:15px;}
+.card p{font-size:12px;margin-top:2px;}
+
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.between h3{font-size:14px;}
+
+.rowItem{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:12px 14px;
+}
+.rowItem b{font-size:13px;display:block;}
+.rowItem small{font-size:11px;display:block;margin-top:2px;}
+
+.empty{
+  text-align:center;padding:30px 12px;color:var(--muted-2);font-size:13px;
+  border:1px dashed var(--line);border-radius:var(--radius-sm);
 }
 
-/* 4. فصل أزرار رفع الملفات (Excel/Backup) */
-input[type="file"] {
-  height: auto !important;
-  padding: 6px !important;
-  background: #0d1117 !important;
-  border: 1px dashed var(--line) !important;
+.badge{
+  display:inline-flex;align-items:center;font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:999px;background:var(--accent-dim);color:var(--accent);
+  border:1px solid var(--accent-dim);white-space:nowrap;
 }
 
-input[type="file"]::file-selector-button {
-  background: var(--line) !important;
-  color: #fff !important;
-  border: none !important;
-  padding: 6px 12px !important;
-  border-radius: 6px !important;
-  margin-left: 8px !important;
-  cursor: pointer !important;
+/* ===================================================================
+   9) الأزرار
+=================================================================== */
+button{
+  position:static!important;transform:none!important;border-radius:var(--radius-sm)!important;
+  font-family:'Cairo',sans-serif!important;cursor:pointer;
 }
 
-/* 5. تثبيت الأزرار في مكانها */
-button {
-  position: static !important;
-  transform: none !important;
-  border-radius: 10px !important;
+.btn,.btnPrimary,form button[type="submit"]{
+  background:var(--accent)!important;color:#fff!important;border:none!important;
+  font-size:13px!important;font-weight:700!important;padding:10px 16px!important;
+  display:inline-flex;align-items:center;gap:6px;justify-content:center;
+  box-shadow:0 4px 14px var(--accent-dim);
+}
+.btn:active,.btnPrimary:active{transform:scale(.97)!important;filter:brightness(.92);}
+
+.btn.secondary,.btnSecondary{
+  background:var(--panel2)!important;color:var(--text)!important;
+  border:1px solid var(--line)!important;box-shadow:none;
 }
 
-form button[type="submit"], 
-.loginBox button {
-  width: 100% !important;
-  margin-top: 10px !important;
+.btn.wide,form button[type="submit"],.loginBox button{
+  width:100%!important;margin-top:10px!important;padding:12px!important;font-size:14px!important;
 }
 
-/* 6. ضبط النوافذ المنبثقة (Modals) */
-.modalBackdrop, .overlay, div[class*="fixed inset-0"] {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 1000 !important;
-  background: rgba(0, 0, 0, 0.8) !important;
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: center !important;
-  backdrop-filter: blur(4px) !important;
+.dangerBtn{background:var(--danger)!important;box-shadow:0 4px 14px rgba(239,68,68,.25);}
+.danger{
+  background:none!important;border:1px solid var(--danger)!important;color:var(--danger)!important;
+  padding:8px 12px!important;font-size:12px!important;font-weight:700!important;
 }
 
-@media (min-width: 640px) {
-  .modalBackdrop, .overlay, div[class*="fixed inset-0"] {
-    align-items: center !important;
-  }
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.actions .btn,.actions .fileBtn{flex:1 1 auto;min-width:fit-content;}
+
+.fileBtn{
+  background:var(--panel2)!important;border:1px solid var(--line)!important;
+  color:var(--text)!important;font-size:13px!important;font-weight:700!important;
+  padding:10px 16px!important;border-radius:var(--radius-sm)!important;
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;position:relative;
+}
+.fileBtn input[type="file"]{
+  position:absolute!important;inset:0;opacity:0;width:100%!important;height:100%!important;
+  cursor:pointer;margin:0!important;padding:0!important;
 }
 
-.modalContent, .modal, div[class*="bg-slate-900"] {
-  width: min(700px, 100%) !important;
-  max-height: 85vh !important;
-  overflow-y: auto !important;
-  background: var(--bg) !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 20px 20px 0 0 !important;
-  padding: 16px !important;
+/* pills (حاضر/متأخر/غائب) */
+.pill{
+  background:var(--panel2)!important;border:1px solid var(--line)!important;color:var(--muted)!important;
+  font-size:11px!important;font-weight:700!important;padding:6px 10px!important;border-radius:999px!important;
+}
+.pill.activePill{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;}
+
+/* ===================================================================
+   10) الحقول والنماذج
+=================================================================== */
+input:not([type="checkbox"]):not([type="radio"]),select,textarea{
+  position:static!important;display:block!important;width:100%!important;height:44px!important;
+  background:var(--panel2)!important;border:1px solid var(--line)!important;color:var(--text)!important;
+  border-radius:var(--radius-sm)!important;padding:0 14px!important;font-size:13px!important;
+  margin-top:4px!important;margin-bottom:0!important;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)!important;outline:none;}
+input::placeholder,textarea::placeholder{color:var(--muted-2)!important;}
+
+textarea,.textarea{height:auto!important;min-height:84px!important;padding:12px 14px!important;}
+
+input[type="file"]{
+  height:auto!important;padding:8px!important;background:var(--panel2)!important;
+  border:1px dashed var(--line)!important;font-size:12px!important;
+}
+input[type="file"]::file-selector-button{
+  background:var(--line)!important;color:var(--text)!important;border:none!important;
+  padding:6px 12px!important;border-radius:6px!important;margin-left:8px!important;cursor:pointer!important;
 }
 
-@media (min-width: 640px) {
-  .modalContent, .modal, div[class*="bg-slate-900"] {
-    border-radius: 20px !important;
-  }
+.space{display:flex;flex-direction:column;gap:2px;}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 10px;}
+.toolbar,.filters{display:flex;gap:10px;flex-wrap:wrap;}
+.toolbar>*,.filters>*{flex:1 1 140px;}
+
+.input.pin{text-align:center;font-size:22px!important;letter-spacing:8px;height:56px!important;}
+.bigInput{height:56px!important;font-size:22px!important;font-weight:800;text-align:center;}
+.codeInput,.smallInput,.gradeInput{max-width:140px;}
+.hint{
+  font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:12px;line-height:1.7;
 }
 
-/* 7. إخفاء اللوجوهات وتغيير الثيم */
-img, .themeToggle {
-  display: none !important;
+.checkList{display:flex;flex-wrap:wrap;gap:8px;}
+.check{
+  display:flex!important;align-items:center;gap:6px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer;
 }
+.check input{width:auto!important;height:auto!important;margin:0!important;}
+
+.gradeRow{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 14px;
+}
+.gradeRow .gradeInput{margin:0!important;}
+
+.scheduleEdit{
+  display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:8px;align-items:center;
+}
+
+/* ===================================================================
+   11) التبويبات (Tabs)
+=================================================================== */
+.tabs{display:flex;gap:6px;background:var(--panel2);border-radius:999px;padding:4px;border:1px solid var(--line);}
+.tabs button{
+  flex:1;background:none!important;border:none!important;color:var(--muted)!important;
+  font-size:12px!important;font-weight:700!important;padding:9px 6px!important;border-radius:999px!important;
+}
+.tabs button.active{background:var(--accent)!important;color:#fff!important;}
+
+/* ===================================================================
+   12) الجداول
+=================================================================== */
+.tableWrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-sm);}
+.tableWrap table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px;}
+.tableWrap th{
+  background:var(--panel2);color:var(--muted);font-size:11px;text-align:right;
+  padding:10px 12px;position:sticky;top:0;
+}
+.tableWrap td{padding:10px 12px;border-top:1px solid var(--line-soft);}
+
+/* ===================================================================
+   13) بطاقة الطالب / QR / Scanner
+=================================================================== */
+.studentHero{display:flex;align-items:center;gap:12px;}
+.avatar{
+  width:52px;height:52px;border-radius:14px;background:var(--accent-dim);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;
+}
+.detailGrid{
+  display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:13px;
+}
+.detailGrid span{color:var(--muted);}
+
+.studentCard{
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+  background:linear-gradient(145deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:var(--radius);padding:20px;
+}
+.cardBrand{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--accent);display:flex;flex-direction:column;gap:2px;}
+.cardBrand span{color:var(--muted-2);font-weight:600;letter-spacing:.5px;}
+.idBig{font-size:26px;font-weight:800;letter-spacing:2px;}
+.studentCard img{display:block!important;width:150px;height:150px;border-radius:12px;background:#fff;padding:8px;}
+.studentCard svg{max-width:100%;}
+
+.scanner{
+  display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;
+  background:var(--panel2);border:1px dashed var(--line);border-radius:var(--radius);
+}
+.scanFrame{
+  width:120px;height:120px;border-radius:var(--radius-sm);border:2px dashed var(--accent);
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+}
+
+.attendanceActions{display:flex;gap:6px;}
+
+/* ===================================================================
+   14) البوتوم ناف
+=================================================================== */
+.bottomNav{
+  position:fixed;bottom:0;right:0;left:0;z-index:30;
+  display:flex;background:var(--panel);border-top:1px solid var(--line);
+  padding:6px 4px calc(6px + var(--safe-bottom));
+}
+.navItem{
+  flex:1;background:none!important;border:none!important;display:flex!important;
+  flex-direction:column;align-items:center;gap:3px;padding:6px 2px!important;
+  color:var(--muted-2)!important;font-size:10px!important;font-weight:600!important;
+}
+.navItem.active{color:var(--accent)!important;}
+
+/* ===================================================================
+   15) المودالات
+=================================================================== */
+.modalBackdrop,.overlay{
+  position:fixed!important;inset:0!important;z-index:1000!important;
+  background:rgba(0,0,0,.75)!important;display:flex!important;align-items:flex-end!important;
+  justify-content:center!important;backdrop-filter:blur(4px)!important;
+}
+@media (min-width:640px){
+  .modalBackdrop,.overlay{align-items:center!important;}
+}
+.modalContent,.modal{
+  width:min(680px,100%)!important;max-height:88vh!important;overflow-y:auto!important;
+  background:var(--bg)!important;border:1px solid var(--line)!important;
+  border-radius:20px 20px 0 0!important;padding:18px!important;
+  display:flex;flex-direction:column;gap:14px;
+}
+@media (min-width:640px){
+  .modalContent,.modal{border-radius:20px!important;}
+}
+.modalHeader,.modalHead{display:flex;align-items:center;justify-content:space-between;}
+.modalHeader h3,.modalHead h3{font-size:16px;}
+.modalBody{display:flex;flex-direction:column;gap:14px;}
+
+.menuGrid{padding-top:4px;}
+
+/* ===================================================================
+   16) التوست / اللودر / شاشة الخطأ
+=================================================================== */
+.toast{
+  position:fixed;bottom:calc(78px + var(--safe-bottom));left:50%;transform:translateX(-50%);
+  background:var(--card);border:1px solid var(--line);color:var(--text);
+  padding:10px 18px;border-radius:999px;font-size:12px;box-shadow:var(--shadow);z-index:1100;
+}
+
+.splash{
+  height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:var(--bg);color:var(--text);
+}
+.splashIcon{
+  width:64px;height:64px;border-radius:18px;background:var(--accent-dim);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+}
+.splash small{color:var(--muted-2);}
+
+.fatal{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);}
+.fatalCard{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:360px;
+}
+.fatalIcon{color:var(--danger);}
+.fatalCard .actions{width:100%;margin-top:6px;}
+
+/* ===================================================================
+   17) شاشة الدخول (PIN)
+=================================================================== */
