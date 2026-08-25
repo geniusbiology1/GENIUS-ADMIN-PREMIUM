@@ -1,6 +1,9 @@
 import React from 'react';
 import * as I from 'lucide-react';
 
+/* ==========================================
+   1. مكونات الواجهة الأساسية (UI Components)
+========================================== */
 export function Screen({ title, action, children }) {
   return (
     <section className="screen">
@@ -75,7 +78,6 @@ export function Modal({ title, children, close }) {
   );
 }
 
-/* Field: يعرض عنواناً ثابتاً وتلميحاً اختياريين لمدخلات النماذج */
 export function Field({ label, hint, required, children }) {
   return (
     <label className="field">
@@ -87,4 +89,30 @@ export function Field({ label, hint, required, children }) {
       {hint && <small className="fieldHint">{hint}</small>}
     </label>
   );
+}
+
+/* ==========================================
+   2. منطق الحصص والعمليات (Session Logic)
+========================================== */
+export const SESSION_STATUS = {
+  UPCOMING: 'UPCOMING',
+  OPEN: 'OPEN',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
+export function openSession(session) {
+  return { ...session, status: SESSION_STATUS.OPEN, openedAt: new Date().toISOString() };
+}
+
+export function completeSession(session) {
+  return { ...session, status: SESSION_STATUS.COMPLETED, completedAt: new Date().toISOString() };
+}
+
+export function sessionSummary(data, sessionId) {
+  const session = (data.sessions || []).find(x => x.id === sessionId);
+  const attendance = (data.attendance || []).filter(x => x.sessionId === sessionId && !x.deletedAt);
+  const grades = (data.grades || []).filter(x => x.sessionId === sessionId && !x.deletedAt);
+  const collection = (data.payments || []).filter(x => x.sessionId === sessionId && !x.deletedAt && x.type === 'PAYMENT').reduce((a, x) => a + Number(x.amount || 0), 0);
+  return { session, attendance, grades, collection };
 }
