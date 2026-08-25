@@ -192,11 +192,10 @@ export function BookForm(p){const [f,setF]=useState({title:'',type:p.dict('bookT
   <Field label="الكمية بالمخزون"><input className="input" type="number" value={f.stock} onChange={e=>setF({...f,stock:e.target.value})} placeholder="0"/></Field>
   <Field label="حد التنبيه عند النقص"><input className="input" type="number" value={f.minStock} onChange={e=>setF({...f,minStock:e.target.value})} placeholder="5"/></Field>
  </div>
- <Field label="المجموعات المرتبطة"><div className="checkList">{p.groups.map(g=><label className="check" key={g.id}><input type="checkbox" checked={f.groupIds.includes(g.id)} onChange={e=>setF({...f,groupIds:e.target.checked?[...f.groupIds,g.id]:f.groupIds.filter(x=>x!==g.id)})}/>{g.name}</label>)}</div></Field>
- <button className="btn wide" onClick={async()=>{if(!f.title)return p.notify('أدخل اسم الكتاب');await p.write('books',{id:uid2('book'),...f,price:Number(f.price),cost:Number(f.cost),stock:Number(f.stock),minStock:Number(f.minStock),academicYearId:p.yearId},'إضافة كتاب');p.setModal(null);p.notify('تم إضافة الكتاب')}}>حفظ الكتاب</button></div></Modal>}
+<Field label="المجموعات المرتبطة"><div className="checkList">...</div></Field>
+<button className="btn wide" onClick={async()=>{ /* ضع دالة الحفظ هنا */ }}>حفظ</button>
+</div>
 
-
-                                                                                                                                                                                                                                                                                                                                                                                }
 export function BookView(p){
  const [sid,setSid]=useState('');
  const statuses=p.dict('bookStatuses');
@@ -217,4 +216,4 @@ export function BookView(p){
   p.notify('تم تحديث الكتاب وربطه بالمالية');setSid('');
  };
  return <Modal title={`إدارة الكتاب — ${p.book.title}`} close={()=>p.setModal(null)}><div className="space"><div className="stats"><Stat n={inventory.available} l="المتاح"/><Stat n={inventory.delivered} l="تم التسليم"/><Stat n={inventory.paid} l="مدفوع"/><Stat n={inventory.lowStock?'تنبيه':'جيد'} l="حالة المخزون"/></div><select className="input" value={sid} onChange={e=>setSid(e.target.value)}><option value="">اختر طالبًا</option>{p.students.filter(s=>p.book.groupIds.includes(s.groupId)).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><select className="input" value={status} onChange={e=>setStatus(e.target.value)}>{statuses.map(x=><option key={x}>{x}</option>)}</select><button className="btn wide" onClick={save}>تسجيل / تحديث الكتاب</button><div className="list">{list.map(x=><Row key={x.id} title={p.studentBy(x.studentId)?.name||'—'} sub={`${x.status} • ${fmtDate(x.date)}`}/>)}</div></div></Modal>
- }
+  }
