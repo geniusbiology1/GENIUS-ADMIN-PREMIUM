@@ -11,8 +11,7 @@ import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, StudentCard, StudentForm, GroupForm, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, Archive, PromotionForm } from '../screens/index.js';
-import '../style.css';
+import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, ...import '../style.css';
 
 export class ErrorBoundary extends React.Component {
   constructor(p){super(p);this.state={hasError:false,error:null}}
@@ -351,6 +350,7 @@ function MainApp(){
     {modal==='student'&&<StudentForm {...pageProps}/>} 
     {modal==='studentView'&&selected&&<Student360 {...pageProps} student={selected}/>} 
     {modal==='card'&&selected&&<StudentCard {...pageProps} student={selected}/>} 
+    {modal==='report'&&selected&&<ReportForm {...pageProps}/>}
     {modal==='group'&&<GroupForm {...pageProps}/>} 
     {modal==='session'&&<SessionForm {...pageProps}/>} 
     {modal==='attendance'&&selected&&<AttendanceModal {...pageProps} session={selected}/>} 
