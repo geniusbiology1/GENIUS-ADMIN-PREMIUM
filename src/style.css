@@ -407,3 +407,108 @@ nav button.active {
   padding: 8px 14px;
   font-size: 10px;
 }
+
+
+/* ==========================================
+   إصلاح تنسيق النوافل وعناوين الخانات الناقصة
+   ========================================== */
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.modalBody form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* عناوين الخانات (السطور التوجيهية فوق الخانة) */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+  width: 100%;
+}
+
+.formGroup label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* تنسيق الخانات والمدخلات */
+.formGroup input,
+.formGroup select,
+.formGroup textarea,
+.modalBody input,
+.modalBody select {
+  width: 100%;
+  height: 40px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+
+.formGroup textarea {
+  height: auto;
+  min-height: 70px;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: var(--accent);
+}
+
+/* صفوف الخانات المزدوجة (جنب بعض) */
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+/* أزرار الحفظ والإلغاء أسفل النوافذ */
+.modalBody .actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn.secondary {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
