@@ -192,9 +192,9 @@ export function BookForm(p){const [f,setF]=useState({title:'',type:p.dict('bookT
   <Field label="الكمية بالمخزون"><input className="input" type="number" value={f.stock} onChange={e=>setF({...f,stock:e.target.value})} placeholder="0"/></Field>
   <Field label="حد التنبيه عند النقص"><input className="input" type="number" value={f.minStock} onChange={e=>setF({...f,minStock:e.target.value})} placeholder="5"/></Field>
  </div>
-<Field label="المجموعات المرتبطة"><div className="checkList">...</div></Field>
-<button className="btn wide" onClick={async()=>{ /* ضع دالة الحفظ هنا */ }}>حفظ</button>
-</div>
+ <Field label="المجموعات المرتبطة"><div className="checkList">{p.groups.map(g=><label className="check" key={g.id}><input type="checkbox" checked={f.groupIds.includes(g.id)} onChange={e=>setF({...f,groupIds:e.target.checked?[...f.groupIds,g.id]:f.groupIds.filter(x=>x!==g.id)})}/>{g.name}</label>)}</div></Field>
+ <button className="btn wide" onClick={async()=>{if(!f.title)return p.notify('أدخل اسم الكتاب');await p.write('books',{id:uid2('book'),...f,price:Number(f.price),cost:Number(f.cost),stock:Number(f.stock),minStock:Number(f.minStock),academicYearId:p.yearId},'إضافة كتاب');p.setModal(null);p.notify('تم إضافة الكتاب')}}>حفظ الكتاب</button></div></Modal>}
+
 
 export function BookView(p){
  const [sid,setSid]=useState('');
@@ -212,8 +212,9 @@ export function BookView(p){
   if(paid&&!oldPayment)await p.write('payments',{id:paymentId,studentId:sid,amount,date:today(),type:'PAYMENT',source:'BOOK',note:`دفع كتاب ${p.book.title}`,academicYearId:p.yearId,branchId:student?.branchId||''},'تسجيل دفع كتاب');
   if(!paid&&!oldCharge)await p.write('payments',{id:chargeId,studentId:sid,amount,date:today(),type:'CHARGE',source:'BOOK',note:`مستحق كتاب ${p.book.title}`,academicYearId:p.yearId,branchId:student?.branchId||''},'تسجيل مستحق كتاب');
   if(paid&&oldCharge)await p.write('payments',{...oldCharge,deletedAt:new Date().toISOString()},'إغلاق مستحق الكتاب بعد الدفع');
+  // Stock is the purchased inventory total; delivered/damaged movements are derived by the inventory engine.
   if(received&&!existing?.status?.includes('مستلم'))await p.write('books',{...p.book,lastMovementAt:new Date().toISOString()},'تحديث حركة مخزون الكتاب');
   p.notify('تم تحديث الكتاب وربطه بالمالية');setSid('');
  };
  return <Modal title={`إدارة الكتاب — ${p.book.title}`} close={()=>p.setModal(null)}><div className="space"><div className="stats"><Stat n={inventory.available} l="المتاح"/><Stat n={inventory.delivered} l="تم التسليم"/><Stat n={inventory.paid} l="مدفوع"/><Stat n={inventory.lowStock?'تنبيه':'جيد'} l="حالة المخزون"/></div><select className="input" value={sid} onChange={e=>setSid(e.target.value)}><option value="">اختر طالبًا</option>{p.students.filter(s=>p.book.groupIds.includes(s.groupId)).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><select className="input" value={status} onChange={e=>setStatus(e.target.value)}>{statuses.map(x=><option key={x}>{x}</option>)}</select><button className="btn wide" onClick={save}>تسجيل / تحديث الكتاب</button><div className="list">{list.map(x=><Row key={x.id} title={p.studentBy(x.studentId)?.name||'—'} sub={`${x.status} • ${fmtDate(x.date)}`}/>)}</div></div></Modal>
-  }
+}
