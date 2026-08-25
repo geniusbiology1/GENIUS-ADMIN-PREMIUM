@@ -197,3 +197,24 @@ export function BookForm(p){const [f,setF]=useState({title:'',type:p.dict('bookT
 
 
                                                                                                                                                                                                                                                                                                                                                                                 }
+export function BookView(p){
+ const [sid,setSid]=useState('');
+ const statuses=p.dict('bookStatuses');
+ const [status,setStatus]=useState(statuses[0]||'غير مدفوع وغير مستلم');
+ const list=p.data.studentBooks.filter(x=>active(x)&&x.bookId===p.book.id);const inventory=bookInventory(p.data,p.book.id);
+ const save=async()=>{
+  if(!sid)return p.notify('اختر الطالب');
+  const student=p.studentBy(sid), existing=list.find(x=>x.studentId===sid), amount=Number(p.book.price||0);
+  const received=/مستلم/.test(status), paid=/مدفوع/.test(status);
+  const row={...(existing||{}),id:existing?.id||uid2('sb'),bookId:p.book.id,studentId:sid,status,date:today(),price:amount,amount,academicYearId:p.yearId,branchId:student?.branchId||''};
+  await p.write('studentBooks',row,'تحديث حالة كتاب');
+  const chargeId=`book_${p.book.id}_${sid}_charge`,paymentId=`book_${p.book.id}_${sid}_payment`;
+  const oldCharge=p.data.payments.find(x=>active(x)&&x.id===chargeId), oldPayment=p.data.payments.find(x=>active(x)&&x.id===paymentId);
+  if(paid&&!oldPayment)await p.write('payments',{id:paymentId,studentId:sid,amount,date:today(),type:'PAYMENT',source:'BOOK',note:`دفع كتاب ${p.book.title}`,academicYearId:p.yearId,branchId:student?.branchId||''},'تسجيل دفع كتاب');
+  if(!paid&&!oldCharge)await p.write('payments',{id:chargeId,studentId:sid,amount,date:today(),type:'CHARGE',source:'BOOK',note:`مستحق كتاب ${p.book.title}`,academicYearId:p.yearId,branchId:student?.branchId||''},'تسجيل مستحق كتاب');
+  if(paid&&oldCharge)await p.write('payments',{...oldCharge,deletedAt:new Date().toISOString()},'إغلاق مستحق الكتاب بعد الدفع');
+  if(received&&!existing?.status?.includes('مستلم'))await p.write('books',{...p.book,lastMovementAt:new Date().toISOString()},'تحديث حركة مخزون الكتاب');
+  p.notify('تم تحديث الكتاب وربطه بالمالية');setSid('');
+ };
+ return <Modal title={`إدارة الكتاب — ${p.book.title}`} close={()=>p.setModal(null)}><div className="space"><div className="stats"><Stat n={inventory.available} l="المتاح"/><Stat n={inventory.delivered} l="تم التسليم"/><Stat n={inventory.paid} l="مدفوع"/><Stat n={inventory.lowStock?'تنبيه':'جيد'} l="حالة المخزون"/></div><select className="input" value={sid} onChange={e=>setSid(e.target.value)}><option value="">اختر طالبًا</option>{p.students.filter(s=>p.book.groupIds.includes(s.groupId)).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><select className="input" value={status} onChange={e=>setStatus(e.target.value)}>{statuses.map(x=><option key={x}>{x}</option>)}</select><button className="btn wide" onClick={save}>تسجيل / تحديث الكتاب</button><div className="list">{list.map(x=><Row key={x.id} title={p.studentBy(x.studentId)?.name||'—'} sub={`${x.status} • ${fmtDate(x.date)}`}/>)}</div></div></Modal>
+ }
