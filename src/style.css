@@ -1,13 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+
 :root {
   font-family: Cairo, "Noto Sans Arabic", system-ui, sans-serif;
   color-scheme: dark;
   --bg: #090b10;
   --panel: #11151d;
   --panel2: #171c25;
+  --panel3: #1f2633;
   --text: #f8fafc;
   --muted: #94a3b8;
   --line: #252c39;
   --accent: #ff0000;
+  --accent-hover: #cc0000;
   --shadow: 0 18px 55px rgba(0, 0, 0, 0.34);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -15,21 +19,24 @@
 
 * {
   box-sizing: border-box;
-}
-
-/* 1. إصلاح مشكلة السكرول والتمرير */
-html, body, #root {
   margin: 0;
   padding: 0;
+  font-family: Cairo, "Noto Sans Arabic", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 1. إعدادات الصفحة الأساسية ومتغيرات السكرول */
+html, body, #root {
   width: 100%;
   height: 100%;
   background: var(--bg);
-  overflow: hidden; /* لمنع السكرول المزدوج */
+  color: var(--text);
+  direction: rtl;
+  overflow: hidden; /* منع السكرول المزدوج */
 }
 
 body {
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
@@ -49,7 +56,7 @@ input, select, textarea {
   -webkit-user-select: text;
 }
 
-/* الهيكل الرئيسي للتطبيق وتدفق السكرول */
+/* 2. الهيكل الرئيسي للتطبيق */
 .app {
   display: flex;
   flex-direction: column;
@@ -61,7 +68,7 @@ input, select, textarea {
   box-sizing: border-box;
 }
 
-/* 2. إصلاح الـ Topbar وتداخل العناصر وحجم الضغط */
+/* 3. الشريط العلوي Topbar */
 .topbar {
   position: sticky;
   top: 0;
@@ -80,38 +87,6 @@ input, select, textarea {
 
 .topbar::-webkit-scrollbar {
   display: none;
-}
-
-.iconBtn {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  min-height: 42px;
-  border-radius: 12px;
-  background: var(--panel2);
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.iconBtn svg {
-  width: 20px;
-}
-
-.notifyBtn i {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 99px;
-  min-width: 16px;
-  height: 16px;
-  font-size: 8px;
-  display: grid;
-  place-items: center;
 }
 
 .brand {
@@ -174,7 +149,39 @@ input, select, textarea {
   flex-shrink: 0;
 }
 
-/* 3. تفعيل السكرول داخل المنطقة الرئيسية */
+.iconBtn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 12px;
+  background: var(--panel2);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.iconBtn svg {
+  width: 20px;
+}
+
+.notifyBtn i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 99px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 8px;
+  display: grid;
+  place-items: center;
+}
+
+/* 4. منطقة العرض الرئيسية (Main Viewport) */
 main {
   flex: 1;
   overflow-y: auto !important;
@@ -202,7 +209,7 @@ main {
   margin: 0;
 }
 
-/* الكارت واللوجو والصورة */
+/* 5. الكروت والبطاقات الترحيبية */
 .hero {
   border: 1px solid #6f111b;
   border-radius: 22px;
@@ -237,12 +244,11 @@ main {
   flex: none;
 }
 
-/* حذف/إخفاء صورة المدرس الافتراضية إذا وجدت */
 .heroTeacher {
   display: none !important;
 }
 
-/* الشبكات والبطاقات */
+/* 6. الشبكات والإحصائيات Quick Grid */
 .stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -295,7 +301,13 @@ main {
   font-size: 9px;
 }
 
-/* القائمة السفلية ثابتة ومحذية */
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* 7. القائمة السفلية Bottom Nav */
 nav {
   position: fixed;
   z-index: 40;
@@ -329,10 +341,10 @@ nav button.active {
   color: #ff3b4d;
 }
 
-/* النوافذ العائمة */
+/* 8. النوافذ العائمة ومربعات الإدخال (Modals & Forms) */
 .modalBackdrop, .overlay {
   position: fixed;
-  z-index: 100;
+  z-index: 1000;
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
   display: flex;
@@ -340,6 +352,13 @@ nav button.active {
   justify-content: center;
   padding: 0;
   backdrop-filter: blur(4px);
+}
+
+@media (min-width: 640px) {
+  .modalBackdrop, .overlay {
+    align-items: center;
+    padding: 16px;
+  }
 }
 
 .modalContent, .modal {
@@ -351,9 +370,130 @@ nav button.active {
   border-radius: 22px 22px 0 0;
   padding: 16px;
   padding-bottom: calc(16px + var(--safe-bottom));
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* شاشة التسجيل والـ Splash */
+@media (min-width: 640px) {
+  .modalContent, .modal {
+    border-radius: 22px;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.modalBody form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* تنسيق عناوين الخانات والمدخلات */
+.formGroup, .inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+  width: 100%;
+}
+
+.formGroup label, .inputGroup label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea,
+.inputGroup input,
+.inputGroup select,
+.inputGroup textarea,
+.modalBody input,
+.modalBody select {
+  width: 100%;
+  height: 40px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+
+.formGroup textarea, .inputGroup textarea {
+  height: auto;
+  min-height: 70px;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.inputGroup input:focus,
+.inputGroup select:focus {
+  border-color: var(--accent);
+}
+
+.formRow, .formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+/* 9. الأزرار والتنبيهات Buttons & Actions */
+.modalBody .actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+}
+
+.btn.secondary {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.btn.secondary:hover {
+  background: var(--panel3);
+}
+
+/* 10. شاشات التسجيل والتحميل Toast & Splash */
 .login {
   min-height: 100dvh;
   padding: var(--safe-top) 18px var(--safe-bottom);
@@ -396,8 +536,8 @@ nav button.active {
 
 .toast {
   position: fixed;
-  z-index: 100;
-  bottom: calc(72px + var(--safe-bottom));
+  z-index: 1100;
+  bottom: calc(74px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   background: #181d27;
@@ -406,109 +546,5 @@ nav button.active {
   border-radius: 12px;
   padding: 8px 14px;
   font-size: 10px;
-}
-
-
-/* ==========================================
-   إصلاح تنسيق النوافل وعناوين الخانات الناقصة
-   ========================================== */
-
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.modalHeader h3 {
-  margin: 0;
-  font-size: 15px;
-  color: var(--text);
-}
-
-.modalBody form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* عناوين الخانات (السطور التوجيهية فوق الخانة) */
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  text-align: right;
-  width: 100%;
-}
-
-.formGroup label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-/* تنسيق الخانات والمدخلات */
-.formGroup input,
-.formGroup select,
-.formGroup textarea,
-.modalBody input,
-.modalBody select {
-  width: 100%;
-  height: 40px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--panel2);
-  color: var(--text);
-  font-size: 12px;
-  outline: none;
-}
-
-.formGroup textarea {
-  height: auto;
-  min-height: 70px;
-}
-
-.formGroup input:focus,
-.formGroup select:focus {
-  border-color: var(--accent);
-}
-
-/* صفوف الخانات المزدوجة (جنب بعض) */
-.formRow {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
-  width: 100%;
-}
-
-/* أزرار الحفظ والإلغاء أسفل النوافذ */
-.modalBody .actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.btn {
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: bold;
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.btn.secondary {
-  background: var(--panel2);
-  color: var(--text);
-  border: 1px solid var(--line);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
