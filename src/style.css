@@ -21,7 +21,7 @@
   --danger: #ef4444;
   --radius: 16px;
   --radius-sm: 10px;
-  --shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -36,7 +36,7 @@
   --text: #141822;
   --muted: #6b7280;
   --muted-2: #98a0ad;
-  --shadow: 0 8px 20px rgba(20, 24, 34, .08);
+  --shadow: 0 8px 20px rgba(20,24,34,.08);
 }
 
 * {
@@ -531,19 +531,6 @@ b {
   border-radius: var(--radius-sm);
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--accent-dim);
-  color: var(--accent);
-  border: 1px solid var(--accent-dim);
-  white-space: nowrap;
-}
-
 /* ===================================================================
    9) الأزرار
 =================================================================== */
@@ -828,7 +815,7 @@ input[type="file"]::file-selector-button {
   color: var(--muted) !important;
   font-size: 12px !important;
   font-weight: 700 !important;
-  padding: 99px 6px !important;
+  padding: 9px 6px !important;
   border-radius: 999px !important;
 }
 
@@ -1010,5 +997,11 @@ input[type="file"]::file-selector-button {
 }
 
 /* ===================================================================
-   17) شاشة الدخول (PIN)
+   15) المودالات
 =================================================================== */
+.modalBackdrop, .overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  background: rgba(0, 0, 0, .75) !important;
+  display: flex !important;
