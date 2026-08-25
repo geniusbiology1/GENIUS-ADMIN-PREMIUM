@@ -251,10 +251,10 @@ function MainApp(){
    }).catch(()=>{});
  },[data,locked,settings.notificationsEnabled]);
 
- if(!data)return (
+if(!data)return (
    <div className="splash" dir="rtl">
      <div className="splashIcon"><I.Cpu size={48}/></div>
-     <b>GENIUS/b>
+     <b>GENIUS ADMIN</b>
      <small>Offline First • جاري تجهيز النظام...</small>
    </div>
  );
