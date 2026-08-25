@@ -464,7 +464,9 @@ input[type="file"]::file-selector-button{
 /* ===================================================================
    17) شاشة الدخول (PIN)
 =================================================================== */
-
+.login{
+  height:100%;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);
+}
 .loginBox{
   width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:30px 24px;
@@ -506,12 +508,6 @@ img{max-width:100%;}
   color:var(--accent)!important;
 }
 
-/* شاشة الدخول: قابلة للسكرول لو الكيبورد قلل المساحة */
-.login{
-  height:auto!important;min-height:100%;overflow-y:auto!important;
-  justify-content:flex-start!important;padding-top:15vh;
-  display:flex;align-items:center;padding:20px;background:var(--bg);
-}
 
 /* منتقي أقسام تقرير ولي الأمر */
 .reportSections{display:flex;flex-wrap:wrap;gap:8px;}
