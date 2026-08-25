@@ -25,14 +25,14 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 1. إعدادات الصفحة الأساسية ومتغيرات السكرول */
+/* 1. إعدادات الصفحة الأساسية */
 html, body, #root {
   width: 100%;
   height: 100%;
   background: var(--bg);
   color: var(--text);
   direction: rtl;
-  overflow: hidden; /* منع السكرول المزدوج */
+  overflow: hidden;
 }
 
 body {
@@ -56,6 +56,11 @@ input, select, textarea {
   -webkit-user-select: text;
 }
 
+/* إخفاء تام لجميع الصور واللوجوهات الداخلية */
+img, .brand img, .heroLogo, .heroTeacher, .loginLogo, .splash img {
+  display: none !important;
+}
+
 /* 2. الهيكل الرئيسي للتطبيق */
 .app {
   display: flex;
@@ -77,7 +82,7 @@ input, select, textarea {
   padding: 6px 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
   flex-shrink: 0;
@@ -91,24 +96,19 @@ input, select, textarea {
 
 .brand {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.brand img {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-}
-
 .brand strong {
-  font-size: 11px;
+  font-size: 13px;
   display: block;
+  color: var(--text);
 }
 
 .brand small {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--muted);
   display: block;
 }
@@ -181,7 +181,7 @@ input, select, textarea {
   place-items: center;
 }
 
-/* 4. منطقة العرض الرئيسية (Main Viewport) */
+/* 4. منطقة العرض الرئيسية */
 main {
   flex: 1;
   overflow-y: auto !important;
@@ -209,7 +209,7 @@ main {
   margin: 0;
 }
 
-/* 5. الكروت والبطاقات الترحيبية */
+/* 5. الكارت الرئيسي */
 .hero {
   border: 1px solid #6f111b;
   border-radius: 22px;
@@ -217,38 +217,23 @@ main {
   background: radial-gradient(circle at 15% 10%, rgba(255, 0, 0, .16), transparent 38%), linear-gradient(145deg, #131721, #220b10);
   box-shadow: var(--shadow);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
 }
 
 .hero h1 {
   font-size: 17px;
-  margin: 4px 0;
+  margin: 0;
 }
 
 .hero p, .hero small {
   color: #a8b0bd;
-  font-size: 9px;
+  font-size: 10px;
   margin: 0;
 }
 
-.heroLogo {
-  width: 85px;
-  height: 48px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #07090d;
-  border: 1px solid #4b1119;
-  padding: 4px;
-  flex: none;
-}
-
-.heroTeacher {
-  display: none !important;
-}
-
-/* 6. الشبكات والإحصائيات Quick Grid */
+/* 6. الشبكات والإحصائيات */
 .stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -341,7 +326,7 @@ nav button.active {
   color: #ff3b4d;
 }
 
-/* 8. النوافذ العائمة ومربعات الإدخال (Modals & Forms) */
+/* 8. النوافذ العائمة والخانات */
 .modalBackdrop, .overlay {
   position: fixed;
   z-index: 1000;
@@ -401,7 +386,6 @@ nav button.active {
   gap: 12px;
 }
 
-/* تنسيق عناوين الخانات والمدخلات */
 .formGroup, .inputGroup {
   display: flex;
   flex-direction: column;
@@ -454,7 +438,7 @@ nav button.active {
   width: 100%;
 }
 
-/* 9. الأزرار والتنبيهات Buttons & Actions */
+/* 9. الأزرار والتنبيهات */
 .modalBody .actions {
   display: flex;
   align-items: center;
@@ -493,7 +477,7 @@ nav button.active {
   background: var(--panel3);
 }
 
-/* 10. شاشات التسجيل والتحميل Toast & Splash */
+/* 10. شاشات الدخول والتحميل بدون صور */
 .login {
   min-height: 100dvh;
   padding: var(--safe-top) 18px var(--safe-bottom);
@@ -511,14 +495,6 @@ nav button.active {
   text-align: center;
 }
 
-.loginLogo {
-  width: min(220px, 70vw);
-  height: auto;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto 12px;
-}
-
 .splash {
   min-height: 100dvh;
   background: radial-gradient(circle at 50% 32%, #3a0d15, #090b10 58%);
@@ -526,12 +502,6 @@ nav button.active {
   place-items: center;
   align-content: center;
   gap: 10px;
-}
-
-.splash img {
-  width: min(220px, 60vw);
-  height: auto;
-  object-fit: contain;
 }
 
 .toast {
