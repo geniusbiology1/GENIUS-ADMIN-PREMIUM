@@ -254,7 +254,7 @@ function MainApp(){
 if(!data)return (
    <div className="splash" dir="rtl">
      <div className="splashIcon"><I.Cpu size={48}/></div>
-     <b>GENIUS ADMIN</b>
+     <b>GENIUS ADMIN PREMIUM/b>
      <small>Offline First • جاري تجهيز النظام...</small>
    </div>
  );
