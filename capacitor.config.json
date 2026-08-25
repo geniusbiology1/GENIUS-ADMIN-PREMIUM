@@ -1,6 +1,6 @@
 {
   "appId": "com.geniusbiology.admin",
-  "appName": "GENIUS ADMIN PREMIUM",
+  "appName": "GENIUS",
   "webDir": "dist",
   "android": { "allowMixedContent": false, "backgroundColor": "#0B0D12" },
   "server": { "androidScheme": "https" },
