@@ -1,40 +1,142 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+/* 1. ضبط الخطوط والوضع الداكن */
 :root {
-  font-family: 'Cairo', system-ui, -apple-system, sans-serif;
-  color-scheme: dark;
-  --safe-top: env(safe-area-inset-top, 0px);
+  --bg: #090b10;
+  --panel: #11151d;
+  --panel2: #171c25;
+  --line: #252c39;
+  --accent: #ff0000;
+  --text: #f8fafc;
+  --muted: #94a3b8;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * {
-  box-sizing: border-box;
+  box-sizing: border-box !important;
   font-family: 'Cairo', sans-serif !important;
   -webkit-tap-highlight-color: transparent;
 }
 
 html, body, #root {
   width: 100%;
-  min-height: 100vh;
-  background-color: #090b10;
-  color: #f8fafc;
-  direction: rtl;
+  height: 100%;
   margin: 0;
   padding: 0;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  direction: rtl !important;
+  overflow: hidden;
 }
 
-/* إخفاء الصور الترويجية وزرار التبديل غير المستخدم */
-img, .themeToggle {
-  display: none !important;
+/* 2. إصلاح الهيكل العام */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
 }
 
-/* إصلاح تحريك السكرول للموبايل */
 main {
-  padding-bottom: calc(85px + var(--safe-bottom)) !important;
+  flex: 1;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  padding: 12px 12px calc(80px + var(--safe-bottom)) !important;
+}
+
+/* 3. منع تداخل الأزرار مع خانات الإدخال والـ PIN */
+div, form, section {
+  position: relative;
+}
+
+input:not([type="checkbox"]):not([type="radio"]), 
+select, 
+textarea {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  height: 42px !important;
+  background: var(--panel2) !important;
+  border: 1px solid var(--line) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+textarea {
+  height: auto !important;
+  min-height: 80px !important;
+}
+
+/* 4. فصل أزرار رفع الملفات (Excel/Backup) */
+input[type="file"] {
+  height: auto !important;
+  padding: 6px !important;
+  background: #0d1117 !important;
+  border: 1px dashed var(--line) !important;
+}
+
+input[type="file"]::file-selector-button {
+  background: var(--line) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  margin-left: 8px !important;
+  cursor: pointer !important;
+}
+
+/* 5. تثبيت الأزرار في مكانها */
+button {
+  position: static !important;
+  transform: none !important;
+  border-radius: 10px !important;
+}
+
+form button[type="submit"], 
+.loginBox button {
+  width: 100% !important;
+  margin-top: 10px !important;
+}
+
+/* 6. ضبط النوافذ المنبثقة (Modals) */
+.modalBackdrop, .overlay, div[class*="fixed inset-0"] {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+@media (min-width: 640px) {
+  .modalBackdrop, .overlay, div[class*="fixed inset-0"] {
+    align-items: center !important;
+  }
+}
+
+.modalContent, .modal, div[class*="bg-slate-900"] {
+  width: min(700px, 100%) !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  background: var(--bg) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 20px 20px 0 0 !important;
+  padding: 16px !important;
+}
+
+@media (min-width: 640px) {
+  .modalContent, .modal, div[class*="bg-slate-900"] {
+    border-radius: 20px !important;
+  }
+}
+
+/* 7. إخفاء اللوجوهات وتغيير الثيم */
+img, .themeToggle {
+  display: none !important;
 }
