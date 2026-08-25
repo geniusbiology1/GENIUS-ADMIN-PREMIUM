@@ -1005,3 +1005,84 @@ input[type="file"]::file-selector-button {
   z-index: 1000 !important;
   background: rgba(0, 0, 0, .75) !important;
   display: flex !important;
+
+/* ===================================================================
+   17) عناوين الحقول وشاشة الدخول
+=================================================================== */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  padding-inline-start: 2px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.fieldLabel .req {
+  color: var(--accent);
+  font-style: normal;
+}
+
+.fieldHint {
+  font-size: 10px;
+  color: var(--muted-2);
+  padding-inline-start: 2px;
+}
+
+.field input, .field select, .field textarea {
+  margin-top: 2px !important;
+}
+
+.phoneRow {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.phoneRow .field {
+  flex: 1;
+}
+
+.pickBtn {
+  height: 44px !important;
+  width: 44px;
+  flex-shrink: 0;
+  padding: 0 !important;
+  background: var(--panel2) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-sm) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent) !important;
+}
+
+.login {
+  height: auto !important;
+  min-height: 100%;
+  overflow-y: auto !important;
+  justify-content: flex-start !important;
+  padding-top: 15vh;
+}
+
+.reportSections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reportPreview {
+  width: 100% !important;
+  min-height: 180px !important;
+  font-size: 12.5px !important;
+  line-height: 1.8;
+   }
+   
