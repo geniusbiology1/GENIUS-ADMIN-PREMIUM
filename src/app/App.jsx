@@ -63,8 +63,8 @@ function Section({ title, children }) {
 const NAV=[['dashboard','الرئيسية',I.LayoutDashboard],['students','الطلاب',I.Users],['groups','المجموعات',I.Layers3],['schedule','الجدول',I.CalendarDays],['finance','المالية',I.Wallet],['reports','التقارير',I.BarChart3],['settings','الإعدادات',I.Settings]];
 
 function MainApp(){
- const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[presetGroupId,setPresetGroupId]=useState(''),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
- const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);window.__gaToast=window.setTimeout(()=>setToast(''),2600)},[]);
+ const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[presetGroupId,setPresetGroupId]=useState(''),[scanSession,setScanSession]=useState(null),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
+ const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);const dur=String(m).includes('\n')?4200:2600;window.__gaToast=window.setTimeout(()=>setToast(''),dur)},[]);
  const load=useCallback(async()=>{
    const x={};
    for(const k of stores){
@@ -272,7 +272,7 @@ function MainApp(){
 
  if(locked)return <Login settings={settings} onOk={()=>{sessionStorage.setItem('genius_auth','1');setLocked(false)}}/>;
  const go=id=>setPage(id);
- const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,presetGroupId,setPresetGroupId,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
+ const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,presetGroupId,setPresetGroupId,scanSession,setScanSession,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
 
  return (
    <div className={`app ${theme}`} dir="rtl">
