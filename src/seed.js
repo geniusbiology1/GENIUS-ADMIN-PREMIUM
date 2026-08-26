@@ -13,11 +13,13 @@ export const defaultData={
   {id:'bookTypes',name:'أنواع الكتب',values:['مذكرة','كتاب خارجي','ملزمة','هدية']},
   {id:'examTypes',name:'أنواع الامتحانات',values:['اختبار حصة','اختبار باب','اختبار شامل','مراجعة']},
   {id:'levels',name:'مستويات الطالب',values:['ممتاز','جيد جدًا','جيد','يحتاج متابعة']},
-  {id:'bookStatuses',name:'حالات الكتب',values:['غير مدفوع وغير مستلم','مستلم غير مدفوع','مدفوع ولم يستلم','مدفوع ومستلم']}
+  {id:'bookStatuses',name:'حالات الكتب',values:['غير مدفوع وغير مستلم','مستلم غير مدفوع','مدفوع ولم يستلم','مدفوع ومستلم']},
+  {id:'discountPresets',name:'نسب الخصم الجاهزة',values:['10','25','50','100']},
+  {id:'holidayReasons',name:'أسباب إجازة الحصص',values:['عطلة رسمية','إجازة عيد','ظرف طارئ','امتحانات المدرسة','أخرى']}
  ],
  groups:[
   {id:'g1',code:'270001',name:'3 ث سمنود 1',branchId:'br1',academicYearId:'ay27',grade:'الصف الثالث الثانوي',subject:'الأحياء',type:'سنتر',status:'ACTIVE',maxStudents:50,pricingModel:'MONTHLY',price:350,startMode:'ACADEMIC_START',startDate:'2026-08-01',whatsapp1:'',whatsapp2:'',schedule:[{day:'الأحد',start:'17:00',end:'18:30'},{day:'الثلاثاء',start:'17:00',end:'18:30'}]},
-  {id:'g2',code:'270002',name:'3 ث سمنود 2',branchId:'br1',academicYearId:'ay27',grade:'الصف الثالث الثانوي',subject:'الأحياء',type:'سنتر',status:'ACTIVE',maxStudents:50,pricingModel:'MONTHLY',price:350,startMode:'ACADEMIC_START',startDate:'2026-08-01',whatsapp1:'',whatsapp2:'',schedule:[{day:'الإثنين',start:'17:00',end:'18:30'},{day:'الأربعاء',start:'17:00',end:'18:30'}]}
+  {id:'g2',code:'270002',name:'3 ث سمنود 2',branchId:'br1',academicYearId:'ay27',grade:'الصف الثالث الثانوي',subject:'الأحياء',type:'سنتر',status:'ACTIVE',maxStudents:50,pricingModel:'MONTHLY',price:350,startMode:'ACADEMIC_START',startDate:'2026-08-01',whatsapp1:'',whatsapp2:'',schedule:[{day:'الاثنين',start:'17:00',end:'18:30'},{day:'الأربعاء',start:'17:00',end:'18:30'}]}
  ],
  students:[{id:'s1',code:'270003',name:'أحمد محمد محمود',grade:'الصف الثالث الثانوي',subject:'الأحياء',academicYearId:'ay27',groupId:'g1',branchId:'br1',status:'نشط',studentPhone:'',parentName:'ولي الأمر',parentPhone:'01012345678',joinDate:'2026-08-01',price:350,discountType:'NONE',discountValue:0,level:'جيد',notes:'',createdAt:new Date().toISOString()}],
  sessions:[],attendance:[],exams:[],grades:[],books:[],studentBooks:[],payments:[],expenses:[],activities:[],notifications:[],followups:[]
