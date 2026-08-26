@@ -515,3 +515,18 @@ img{max-width:100%;}
 .reportPreview{
   width:100%!important;min-height:180px!important;font-size:12.5px!important;line-height:1.8;
 }
+
+
+/* ===================================================================
+   20) الآلة الحاسبة (أداة سريعة من قائمة النظام)
+=================================================================== */
+.calcScreen{
+  background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px;text-align:left;direction:ltr;
+}
+.calcExpr{font-size:16px;color:var(--muted);min-height:22px;word-break:break-all;}
+.calcResult{font-size:28px;font-weight:800;margin-top:4px;word-break:break-all;}
+.calcGrid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+}
+.calcGrid button{font-size:16px!important;font-weight:700!important;padding:14px 0!important;}
