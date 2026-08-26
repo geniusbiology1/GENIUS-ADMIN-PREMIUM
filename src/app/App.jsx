@@ -11,7 +11,7 @@ import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
+import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
 import '../style.css';
 
 export class ErrorBoundary extends React.Component {
@@ -63,7 +63,7 @@ function Section({ title, children }) {
 const NAV=[['dashboard','الرئيسية',I.LayoutDashboard],['students','الطلاب',I.Users],['groups','المجموعات',I.Layers3],['schedule','الجدول',I.CalendarDays],['finance','المالية',I.Wallet],['reports','التقارير',I.BarChart3],['settings','الإعدادات',I.Settings]];
 
 function MainApp(){
- const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
+ const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[presetGroupId,setPresetGroupId]=useState(''),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
  const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);window.__gaToast=window.setTimeout(()=>setToast(''),2600)},[]);
  const load=useCallback(async()=>{
    const x={};
@@ -272,7 +272,7 @@ function MainApp(){
 
  if(locked)return <Login settings={settings} onOk={()=>{sessionStorage.setItem('genius_auth','1');setLocked(false)}}/>;
  const go=id=>setPage(id);
- const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
+ const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,presetGroupId,setPresetGroupId,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
 
  return (
    <div className={`app ${theme}`} dir="rtl">
@@ -376,6 +376,7 @@ function MainApp(){
     {modal==='card'&&selected&&<StudentCard {...pageProps} student={selected}/>} 
     {modal==='report'&&selected&&<ReportForm {...pageProps}/>} 
     {modal==='group'&&<GroupForm {...pageProps}/>} 
+    {modal==='groupView'&&selected&&<GroupView {...pageProps}/>}
     {modal==='session'&&<SessionForm {...pageProps}/>} 
     {modal==='attendance'&&selected&&<AttendanceModal {...pageProps} session={selected}/>} 
     {modal==='payment'&&<PaymentForm {...pageProps}/>} 
