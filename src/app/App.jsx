@@ -76,6 +76,8 @@ function MainApp(){
    }
    s.accent='#FF0000';s.autoBackupMode=s.autoBackupMode||'DAILY';s.autoLockMinutes=Number(s.autoLockMinutes||15);s.soundEnabled=s.soundEnabled!==false;s.hapticEnabled=s.hapticEnabled!==false;s.notificationsEnabled=s.notificationsEnabled!==false;
    x.settings=[s];const current=x.academicYears.find(y=>y.current)||x.academicYears[0];const month=today().slice(0,7);
+   for(const dict of defaultData.dictionaries){if(!x.dictionaries.some(d=>d.id===dict.id)){await put('dictionaries',dict);x.dictionaries.push(dict)}}
+   x.students=x.students.map(st=>({...st,discountType:st.discountType||'NONE',discountValue:Number(st.discountValue||0)}));
    const createdCharges=await createMonthlyCharges(x,current?.id,month);if(createdCharges.length)x.payments.push(...createdCharges);
    x.groups=x.groups.map(g=>({...g,academicYearId:g.academicYearId||current?.id}));for(const g of x.groups)await put('groups',g);
    setData(x);setYearId(current?.id||'');setTheme(s.theme||'dark');
@@ -115,7 +117,7 @@ function MainApp(){
  const dict=useCallback(id=>data?.dictionaries?.find(x=>x.id===id)?.values||[],[data]);
  const chargeTotal=useCallback(s=>data.payments.filter(p=>active(p)&&p.studentId===s.id&&p.type==='CHARGE').reduce((a,p)=>a+Number(p.amount||0),0),[data]);
  const paidTotal=useCallback(s=>data.payments.filter(p=>active(p)&&p.studentId===s.id&&p.type==='PAYMENT').reduce((a,p)=>a+Number(p.amount||0),0),[data]);
- const sessionDue=useCallback(s=>{const g=groupBy(s.groupId);return g?.pricingModel==='PER_SESSION'?data.attendance.filter(a=>active(a)&&a.studentId===s.id&&a.billable).length*Number(g.price||0):0},[data,groupBy]);
+ const sessionDue=useCallback(s=>{const g=groupBy(s.groupId);if(g?.pricingModel!=='PER_SESSION')return 0;let unit=Number(s.price||g.price||0);if(s.discountType==='PERCENT')unit-=unit*Number(s.discountValue||0)/100;if(s.discountType==='FIXED')unit-=Number(s.discountValue||0);unit=Math.max(0,unit);return data.attendance.filter(a=>active(a)&&a.studentId===s.id&&a.billable).length*unit},[data,groupBy]);
  const due=useCallback(s=>Math.max(0,chargeTotal(s)+sessionDue(s)-paidTotal(s)),[chargeTotal,sessionDue,paidTotal]);
  const attendanceRate=useCallback(s=>{const a=data.attendance.filter(x=>active(x)&&x.studentId===s.id);return a.length?Math.round(a.filter(x=>x.status==='حاضر'||x.status==='متأخر').length/a.length*100):0},[data]);
  const avg=useCallback(s=>{const a=data.grades.filter(x=>active(x)&&x.studentId===s.id);return a.length?Math.round(a.reduce((z,x)=>z+(Number(x.score||0)/Number(x.maxScore||1))*100,0)/a.length):0},[data]);
