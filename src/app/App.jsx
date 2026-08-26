@@ -11,7 +11,7 @@ import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive } from '../screens/index.js';
+import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
 import '../style.css';
 
 export class ErrorBoundary extends React.Component {
@@ -47,6 +47,15 @@ function Modal({ title, close, children }) {
         </div>
         <div className="modalBody">{children}</div>
       </div>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div className="menuSection" style={{ marginBottom: '1rem' }}>
+      {title && <h4 style={{ margin: '0 0 0.5rem 0', opacity: 0.8, fontSize: '0.9rem' }}>{title}</h4>}
+      {children}
     </div>
   );
 }
@@ -339,14 +348,26 @@ function MainApp(){
 
     {modal==='menu' && (
       <Modal title="قائمة النظام الشاملة" close={()=>setModal(null)}>
-        <div className="menuGrid">
-          {[ ['reports','التقارير',I.BarChart3],['notifications','الإشعارات',I.Bell],['activity','سجل العمليات',I.History],['archive','الأرشيف',I.Archive],['settings','الإعدادات',I.Settings]].map(([id,l,Icon])=>(
-            <button key={id} className="menuItem" onClick={()=>{setModal(null);go(id)}}>
-              <Icon size={22}/>
-              <span>{l}</span>
-            </button>
-          ))}
-        </div>
+        <Section title="أدوات وإجراءات سريعة">
+          <div className="menuGrid">
+            {[['calculator','آلة حاسبة',I.Calculator,()=>setModal('calculator')],['quickGrades','درجات سريعة',I.GraduationCap,()=>setModal('quickGrades')],['payment','دفعة سريعة',I.Banknote,()=>{setSelected(null);setModal('payment')}],['quickBooks','تسليم كتاب',I.BookOpen,()=>setModal('quickBooks')],['quickSubscriptions','تسديد الاشتراكات',I.RefreshCcw,()=>setModal('quickSubscriptions')]].map(([id,l,Icon,fn])=>(
+              <button key={id} className="menuItem" onClick={()=>{setModal(null);fn()}}>
+                <Icon size={22}/>
+                <span>{l}</span>
+              </button>
+            ))}
+          </div>
+        </Section>
+        <Section title="التنقل">
+          <div className="menuGrid">
+            {[['reports','التقارير',I.BarChart3],['notifications','الإشعارات',I.Bell],['activity','سجل العمليات',I.History],['archive','الأرشيف',I.Archive],['settings','الإعدادات',I.Settings]].map(([id,l,Icon])=>(
+              <button key={id} className="menuItem" onClick={()=>{setModal(null);go(id)}}>
+                <Icon size={22}/>
+                <span>{l}</span>
+              </button>
+            ))}
+          </div>
+        </Section>
       </Modal>
     )}
 
@@ -368,6 +389,10 @@ function MainApp(){
     {modal==='pin'&&<PinForm {...pageProps}/>} 
     {modal==='drive'&&<DriveBackup {...pageProps}/>} 
     {modal==='branches'&&<BranchForm {...pageProps}/>} 
+    {modal==='calculator'&&<Calculator {...pageProps}/>} 
+    {modal==='quickGrades'&&<QuickGrades {...pageProps}/>} 
+    {modal==='quickBooks'&&<QuickBooks {...pageProps}/>} 
+    {modal==='quickSubscriptions'&&<QuickSubscriptions {...pageProps}/>}
     {modal==='scan'&&<Scanner {...pageProps}/>} 
    </div>
  );
