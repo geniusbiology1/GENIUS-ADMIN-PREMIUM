@@ -40,18 +40,58 @@ function svgToPngDataUrl(svgEl,scale=3){
   });
 }
 
-export function AttendanceModal(p){const groupStudents=p.students.filter(s=>s.groupId===p.session.groupId&&s.status==='نشط');const attendanceRows=p.data.attendance.filter(x=>active(x)&&x.sessionId===p.session.id);const attendanceSummary=attendanceStats(attendanceRows);const [code,setCode]=useState('');const [tab,setTab]=useState('attendance');const mark=async(s,status)=>{const id=`${p.session.id}_${s.id}`;await p.write('attendance',{id,sessionId:p.session.id,studentId:s.id,status,billable:status!=='غائب',time:new Date().toISOString(),academicYearId:p.session.academicYearId},'تسجيل حضور');await p.buzz();p.notify(`${status} — ${s.name}`)};const scan=()=>p.setModal('scan');const lifecycle=async next=>{if(next==='OPEN'){for(const row of ensureSessionAttendance(p.data,p.session))await p.write('attendance',row,'تهيئة حضور الحصة')}const updated=next==='OPEN'?openSession(p.session):completeSession(p.session);await p.write('sessions',updated,next==='OPEN'?'فتح الحصة':'إنهاء الحصة');p.setSelected(updated);p.notify(next==='OPEN'?'تم فتح الحصة':'تم إنهاء الحصة')};const summary=sessionSummary(p.data,p.session.id);return <Modal title={`حصة — ${p.groupBy(p.session.groupId)?.name||''}`} close={()=>p.setModal(null)}><div className="between"><span className="badge">{p.session.status||'UPCOMING'}</span><div className="actions">{p.session.status!=='OPEN'&&p.session.status!=='COMPLETED'&&<button className="btn" onClick={()=>lifecycle('OPEN')}>فتح الحصة</button>}{p.session.status==='OPEN'&&<button className="btn secondary" onClick={()=>lifecycle('COMPLETED')}>إنهاء الحصة</button>}</div></div><div className="tabs"><button className={tab==='attendance'?'active':''} onClick={()=>setTab('attendance')}>الحضور</button><button className={tab==='data'?'active':''} onClick={()=>setTab('data')}>بيانات</button><button className={tab==='grades'?'active':''} onClick={()=>setTab('grades')}>الدرجات</button></div>{tab==='attendance'&&<><div className="actions"><button className="btn" onClick={scan}><I.ScanLine/> Scan ID</button><input className="input codeInput" placeholder="اكتب ID ثم Enter" value={code} onChange={e=>setCode(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){const s=groupStudents.find(x=>x.code===code.trim());if(s)mark(s,'حاضر');else p.notify('ID غير موجود في المجموعة');setCode('')}}}/><button className="btn secondary" onClick={async()=>{for(const s of groupStudents)await mark(s,'حاضر');}}>الكل حاضر</button></div><div className="list">{groupStudents.map(s=>{const a=p.data.attendance.find(x=>active(x)&&x.id===`${p.session.id}_${s.id}`);return <div className="rowItem" key={s.id}><div><b>{s.name}</b><small>{s.code} • {a?.status||'لم يسجل'}</small></div><div className="attendanceActions"><button className={a?.status==='حاضر'?'pill activePill':'pill'} onClick={()=>mark(s,'حاضر')}>حاضر</button><button className={a?.status==='متأخر'?'pill activePill':'pill'} onClick={()=>mark(s,'متأخر')}>متأخر</button><button className={a?.status==='غائب'?'pill activePill':'pill'} onClick={()=>mark(s,'غائب')}>غائب</button></div></div>})}</div></>}{tab==='data'&&<div className="stats"><Stat n={groupStudents.length} l="إجمالي"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status!=='غائب')).length} l="حاضر"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status==='غائب')).length} l="غائب"/><Stat n={money(summary.collection)} l="تحصيل الحصة"/><Stat n={`${attendanceSummary.rate}%`} l="النسبة"/></div>}{tab==='grades'&&<p className="hint">لإدارة درجات الامتحانات افتح شاشة الامتحانات؛ الدرجة تحفظ تلقائيًا في سجل كل طالب.</p>}</Modal>}
+/* تنبيه الحضور الموحّد: نفس الرسالة أيًا كان منفذ التسجيل (يدوي / سكانر / بحث بالاسم) */
+export function buildWelcome(p,s){
+ const lines=[`أهلاً ${s.name} 👋`];
+ const dueAmt=p.due(s);
+ if(dueAmt>0)lines.push(`⚠️ متأخرات: ${money(dueAmt)}`);
+ const bookPending=(p.data.studentBooks||[]).some(x=>active(x)&&x.studentId===s.id&&/غير مدفوع|لم يستلم/.test(x.status));
+ if(bookPending)lines.push('📘 عليه مذكرة غير مسددة أو غير مستلمة');
+ if(s.level&&/يحتاج متابعة/.test(s.level))lines.push(`📉 المستوى: ${s.level}`);
+ const rate=p.attendanceRate(s);
+ if(rate<75)lines.push(`📅 نسبة حضوره العامة: ${rate}%`);
+ return lines.join('\n');
+}
+export async function markAttendance(p,session,s,status){
+ const id=`${session.id}_${s.id}`;
+ await p.write('attendance',{id,sessionId:session.id,studentId:s.id,status,billable:status!=='غائب',time:new Date().toISOString(),academicYearId:session.academicYearId},'تسجيل حضور');
+ await p.buzz();
+ if(status==='غائب')p.notify(`غائب — ${s.name}`);
+ else p.notify(buildWelcome(p,s));
+}
+
+export function AttendanceModal(p){const groupStudents=p.students.filter(s=>s.groupId===p.session.groupId&&s.status==='نشط');const attendanceRows=p.data.attendance.filter(x=>active(x)&&x.sessionId===p.session.id);const attendanceSummary=attendanceStats(attendanceRows);const [code,setCode]=useState('');const [suggestions,setSuggestions]=useState([]);const [tab,setTab]=useState('attendance');const mark=(s,status)=>markAttendance(p,p.session,s,status);const doSearch=v=>{setCode(v);const q=v.trim();if(!q){setSuggestions([]);return}const exact=groupStudents.find(x=>x.code===q);if(exact){mark(exact,'حاضر');setCode('');setSuggestions([]);return}setSuggestions(groupStudents.filter(x=>x.name.includes(q)).slice(0,5))};const pickSuggestion=s=>{mark(s,'حاضر');setCode('');setSuggestions([])};const scan=()=>{p.setScanSession(p.session);p.setModal('scan')};const lifecycle=async next=>{if(next==='OPEN'){for(const row of ensureSessionAttendance(p.data,p.session))await p.write('attendance',row,'تهيئة حضور الحصة')}const updated=next==='OPEN'?openSession(p.session):completeSession(p.session);await p.write('sessions',updated,next==='OPEN'?'فتح الحصة':'إنهاء الحصة');p.setSelected(updated);p.notify(next==='OPEN'?'تم فتح الحصة':'تم إنهاء الحصة')};const summary=sessionSummary(p.data,p.session.id);return <Modal title={`حصة — ${p.groupBy(p.session.groupId)?.name||''}`} close={()=>p.setModal(null)}><div className="between"><span className="badge">{p.session.status||'UPCOMING'}</span><div className="actions">{p.session.status!=='OPEN'&&p.session.status!=='COMPLETED'&&<button className="btn" onClick={()=>lifecycle('OPEN')}>فتح الحصة</button>}{p.session.status==='OPEN'&&<button className="btn secondary" onClick={()=>lifecycle('COMPLETED')}>إنهاء الحصة</button>}</div></div><div className="tabs"><button className={tab==='attendance'?'active':''} onClick={()=>setTab('attendance')}>الحضور</button><button className={tab==='data'?'active':''} onClick={()=>setTab('data')}>بيانات</button><button className={tab==='grades'?'active':''} onClick={()=>setTab('grades')}>الدرجات</button></div>{tab==='attendance'&&<><div className="actions"><button className="btn" onClick={scan}><I.ScanLine/> Scan ID (مستمر)</button><input className="input codeInput" placeholder="اكتب ID أو اسم الطالب" value={code} onChange={e=>doSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&suggestions.length===1)pickSuggestion(suggestions[0])}}/><button className="btn secondary" onClick={async()=>{for(const s of groupStudents)await mark(s,'حاضر');}}>الكل حاضر</button></div>{suggestions.length>0&&<div className="checkList">{suggestions.map(s=><button key={s.id} type="button" className="pill" onClick={()=>pickSuggestion(s)}>{s.name}</button>)}</div>}<div className="list">{groupStudents.map(s=>{const a=p.data.attendance.find(x=>active(x)&&x.id===`${p.session.id}_${s.id}`);return <div className="rowItem" key={s.id}><div><b>{s.name}</b><small>{s.code} • {a?.status||'لم يسجل'}</small></div><div className="attendanceActions"><button className={a?.status==='حاضر'?'pill activePill':'pill'} onClick={()=>mark(s,'حاضر')}>حاضر</button><button className={a?.status==='متأخر'?'pill activePill':'pill'} onClick={()=>mark(s,'متأخر')}>متأخر</button><button className={a?.status==='غائب'?'pill activePill':'pill'} onClick={()=>mark(s,'غائب')}>غائب</button></div></div>})}</div></>}{tab==='data'&&<div className="stats"><Stat n={groupStudents.length} l="إجمالي"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status!=='غائب')).length} l="حاضر"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status==='غائب')).length} l="غائب"/><Stat n={money(summary.collection)} l="تحصيل الحصة"/><Stat n={`${attendanceSummary.rate}%`} l="النسبة"/></div>}{tab==='grades'&&<p className="hint">لإدارة درجات الامتحانات افتح شاشة الامتحانات؛ الدرجة تحفظ تلقائيًا في سجل كل طالب.</p>}</Modal>}
 
 
 export function Scanner(p){
- const [code,setCode]=useState(''),[busy,setBusy]=useState(false),[msg,setMsg]=useState('جاهز للمسح بالكاميرا');
- const resolve=useCallback(value=>{const s=p.students.find(x=>x.code===String(value||'').trim());if(s){p.setSelected(s);p.setModal('card')}else p.notify('الكود غير معروف')},[p]);
- const nativeScan=async()=>{setBusy(true);try{const supported=await isScannerSupported();if(!supported){setMsg('الماسح الأصلي غير مدعوم على هذا الجهاز');return}const value=await scanGENIUSID();if(value)resolve(value);else setMsg('لم يتم العثور على كود')}catch(e){console.error(e);setMsg('تعذر تشغيل الكاميرا — تأكد من صلاحية الكاميرا')}finally{setBusy(false)}};
- return <Modal title="GENIUS Scanner" close={()=>{stopScanner();p.setModal(null)}}>
+ const session=p.scanSession;
+ const [code,setCode]=useState(''),[busy,setBusy]=useState(false),[msg,setMsg]=useState(session?'جاهز لمسح الطالب التالي':'جاهز للمسح بالكاميرا');
+ const handleFound=useCallback(async value=>{
+  const v=String(value||'').trim();
+  if(!v)return;
+  const s=p.students.find(x=>x.code===v);
+  if(!s){setMsg('الكود غير معروف');return}
+  if(session){await markAttendance(p,session,s,'حاضر');setMsg(`${s.name} — تم تسجيل الحضور، جاهز للطالب التالي`);return}
+  p.setSelected(s);p.setModal('card');
+ },[p,session]);
+ const nativeScan=async()=>{
+  setBusy(true);
+  try{
+   const supported=await isScannerSupported();
+   if(!supported){setMsg('الماسح الأصلي غير مدعوم على هذا الجهاز');return}
+   const value=await scanGENIUSID();
+   if(value){await handleFound(value);if(session)setTimeout(nativeScan,600)}
+   else setMsg('لم يتم العثور على كود')
+  }catch(e){console.error(e);setMsg('تعذر تشغيل الكاميرا — تأكد من صلاحية الكاميرا')}
+  finally{setBusy(false)}
+ };
+ const back=()=>{stopScanner();if(session){p.setSelected(session);p.setModal('attendance');p.setScanSession(null)}else p.setModal(null)};
+ return <Modal title={session?'مسح الحضور المستمر':'GENIUS Scanner'} close={back}>
   <div className="scanner"><div className="scanFrame"><I.ScanLine size={46}/></div><small>{msg}</small></div>
   <button className="btn wide" disabled={busy} onClick={nativeScan}><I.Camera/> {busy?'جاري المسح...':'فتح الكاميرا والمسح'}</button>
-  <input className="input" value={code} onChange={e=>setCode(e.target.value)} placeholder="أو أدخل GENIUS ID يدويًا"/>
-  <button className="btn secondary wide" onClick={()=>resolve(code)}>فتح الطالب</button>
+  <input className="input" value={code} onChange={e=>setCode(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){handleFound(code);setCode('')}}} placeholder="أو أدخل GENIUS ID يدويًا"/>
+  <button className="btn secondary wide" onClick={()=>{handleFound(code);setCode('')}}>{session?'تسجيل الحضور':'فتح الطالب'}</button>
+  {session&&<button className="btn secondary wide" onClick={back}>إنهاء المسح والعودة للحصة</button>}
  </Modal>
 }
 
