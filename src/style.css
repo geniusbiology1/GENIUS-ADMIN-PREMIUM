@@ -440,7 +440,8 @@ input[type="file"]::file-selector-button{
 .toast{
   position:fixed;bottom:calc(78px + var(--safe-bottom));left:50%;transform:translateX(-50%);
   background:var(--card);border:1px solid var(--line);color:var(--text);
-  padding:10px 18px;border-radius:999px;font-size:12px;box-shadow:var(--shadow);z-index:1100;
+  padding:10px 18px;border-radius:16px;font-size:12px;box-shadow:var(--shadow);z-index:1100;
+  white-space:pre-line;max-width:min(340px,88vw);text-align:center;line-height:1.6;
 }
 
 .splash{
@@ -515,7 +516,6 @@ img{max-width:100%;}
 .reportPreview{
   width:100%!important;min-height:180px!important;font-size:12.5px!important;line-height:1.8;
 }
-
 
 /* ===================================================================
    20) الآلة الحاسبة (أداة سريعة من قائمة النظام)
