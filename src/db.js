@@ -1,6 +1,6 @@
 const DB='genius_admin_premium';
-export const DB_VERSION=5;
-export const stores=['settings','dictionaries','branches','academicYears','groups','students','sessions','attendance','exams','grades','books','studentBooks','payments','paymentAllocations','expenses','activities','notifications','followups','backupMeta','outbox'];
+export const DB_VERSION=6;
+export const stores=['settings','dictionaries','branches','academicYears','groups','students','sessions','attendance','exams','grades','books','studentBooks','bookMovements','recitations','payments','paymentAllocations','expenses','activities','notifications','followups','backupMeta','outbox'];
 let dbPromise;
 
 function open(){
