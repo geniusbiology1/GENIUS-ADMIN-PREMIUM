@@ -75,7 +75,7 @@ function MainApp(){
        s.pinHash=btoa('1234_fixed_salt');s.pinSalt='fixed_salt';await put('settings',s);
      }
    }
-   s.accent='#FF0000';s.autoBackupMode=s.autoBackupMode||'DAILY';s.autoLockMinutes=Number(s.autoLockMinutes||15);s.soundEnabled=s.soundEnabled!==false;s.hapticEnabled=s.hapticEnabled!==false;s.notificationsEnabled=s.notificationsEnabled!==false;
+   s.accent='#FF0000';s.autoBackupMode=s.autoBackupMode||'DAILY';s.autoLockMinutes=Number(s.autoLockMinutes||15);s.soundEnabled=s.soundEnabled!==false;s.hapticEnabled=s.hapticEnabled!==false;s.notificationsEnabled=s.notificationsEnabled!==false;s.printCosts=s.printCosts||{paper:0.5,binding:2,cover:1.5,notes:0.5};
    x.settings=[s];const current=x.academicYears.find(y=>y.current)||x.academicYears[0];const month=today().slice(0,7);
    for(const dict of defaultData.dictionaries){if(!x.dictionaries.some(d=>d.id===dict.id)){await put('dictionaries',dict);x.dictionaries.push(dict)}}
    x.students=x.students.map(st=>({...st,discountType:st.discountType||'NONE',discountValue:Number(st.discountValue||0)}));
