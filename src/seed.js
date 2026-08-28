@@ -1,7 +1,7 @@
 import {uid,today} from './db';
 export {uid,today};
 export const defaultData={
- settings:[{id:'main',name:'GENIUS BIOLOGY',teacher:'د. علاء عبد الجواد شتا',subject:'الأحياء',phone:'01066994986',pin:'1234',pinHash:'',pinSalt:'',theme:'dark',accent:'#FF0000',autoLockMinutes:15,soundEnabled:true,hapticEnabled:true,notificationsEnabled:true,autoBackupMode:'MANUAL',autoBackupAfterChanges:20,backupRetention:5,driveClientId:'',driveFolderId:'',idPrefix:'GB'}],
+ settings:[{id:'main',name:'GENIUS BIOLOGY',teacher:'د. علاء عبد الجواد شتا',subject:'الأحياء',phone:'01066994986',pin:'1234',pinHash:'',pinSalt:'',theme:'dark',accent:'#FF0000',autoLockMinutes:15,soundEnabled:true,hapticEnabled:true,notificationsEnabled:true,autoBackupMode:'MANUAL',autoBackupAfterChanges:20,backupRetention:5,driveClientId:'',driveFolderId:'',idPrefix:'GB',printCosts:{paper:0.5,binding:2,cover:1.5,notes:0.5}}],
  academicYears:[{id:'ay27',name:'2026 - 2027',shortCode:'27',start:'2026-08-01',end:'2027-07-31',current:true}],
  branches:[{id:'br1',name:'سمنود'},{id:'br2',name:'الناصرية'},{id:'br3',name:'أبو صير'},{id:'br4',name:'منية سمنود'}],
  dictionaries:[
@@ -15,7 +15,8 @@ export const defaultData={
   {id:'levels',name:'مستويات الطالب',values:['ممتاز','جيد جدًا','جيد','يحتاج متابعة']},
   {id:'bookStatuses',name:'حالات الكتب',values:['غير مدفوع وغير مستلم','مستلم غير مدفوع','مدفوع ولم يستلم','مدفوع ومستلم']},
   {id:'discountPresets',name:'نسب الخصم الجاهزة',values:['10','25','50','100']},
-  {id:'holidayReasons',name:'أسباب إجازة الحصص',values:['عطلة رسمية','إجازة عيد','ظرف طارئ','امتحانات المدرسة','أخرى']}
+  {id:'holidayReasons',name:'أسباب إجازة الحصص',values:['عطلة رسمية','إجازة عيد','ظرف طارئ','امتحانات المدرسة','أخرى']},
+  {id:'recitationLevels',name:'مستويات التسميع اليومي',values:['ممتاز','جيد','متوسط','ضعيف','لم يسمع']}
  ],
  groups:[
   {id:'g1',code:'270001',name:'3 ث سمنود 1',branchId:'br1',academicYearId:'ay27',grade:'الصف الثالث الثانوي',subject:'الأحياء',type:'سنتر',status:'ACTIVE',maxStudents:50,pricingModel:'MONTHLY',price:350,startMode:'ACADEMIC_START',startDate:'2026-08-01',whatsapp1:'',whatsapp2:'',schedule:[{day:'الأحد',start:'17:00',end:'18:30'},{day:'الثلاثاء',start:'17:00',end:'18:30'}]},
