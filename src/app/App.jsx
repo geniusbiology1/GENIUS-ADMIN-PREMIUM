@@ -11,9 +11,46 @@ import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Schedule, daySessions, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
+import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
 import { Section } from '../components/ui.jsx';
 import '../style.css';
+
+// دالة حساب حصص اليوم للإشعارات التلقائية
+export function daySessions({ data, groups, students, groupBy }, dateStr) {
+  if (!data?.sessions) return [];
+  const dt = new Date(dateStr || today());
+  const dayName = dt.toLocaleDateString('ar-EG', { weekday: 'long' });
+  const list = [];
+
+  for (const s of data.sessions) {
+    if (!active(s) || s.date !== dateStr) continue;
+    const g = groupBy ? groupBy(s.groupId) : groups?.find(x => x.id === s.groupId);
+    list.push({ ...s, group: g });
+  }
+
+  if (groups) {
+    for (const g of groups) {
+      if (!active(g)) continue;
+      for (const slot of g.schedule || []) {
+        if (slot.day === dayName) {
+          const exists = list.some(x => x.groupId === g.id && x.timeStart === slot.start);
+          if (!exists) {
+            list.push({
+              id: `gen_${g.id}_${slot.start}`,
+              groupId: g.id,
+              group: g,
+              date: dateStr,
+              timeStart: slot.start,
+              timeEnd: slot.end,
+              status: 'UPCOMING'
+            });
+          }
+        }
+      }
+    }
+  }
+  return list;
+}
 
 export class ErrorBoundary extends React.Component {
   constructor(p){super(p);this.state={hasError:false,error:null}}
