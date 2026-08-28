@@ -48,3 +48,20 @@ export async function pickContact(){
     return {name:c.name?.[0]||'',tel:c.tel?.[0]||''};
   }catch(e){console.error(e);return null}
 }
+
+export async function scheduleLocalNotifications(items){
+  try{
+    const p=await native();
+    if(!p.notifications?.LocalNotifications)return false;
+    await p.notifications.LocalNotifications.requestPermissions();
+    await p.notifications.LocalNotifications.schedule({notifications:items});
+    return true;
+  }catch(e){console.error(e);return false}
+}
+export async function cancelLocalNotifications(ids){
+  try{
+    const p=await native();
+    if(!p.notifications?.LocalNotifications||!ids.length)return;
+    await p.notifications.LocalNotifications.cancel({notifications:ids.map(id=>({id}))});
+  }catch(e){console.error(e)}
+}
