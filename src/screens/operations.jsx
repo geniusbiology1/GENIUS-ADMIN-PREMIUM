@@ -13,7 +13,6 @@ import {ensureAttendance as ensureSessionAttendance,stats as attendanceStats} fr
 import {scanGENIUSID,isScannerSupported,stopScanner} from '../services/scanner/nativeScanner.js';
 import {shareText,shareImageDataUrl,pickContact} from '../native.js';
 import {validStudent,uniqueCodes} from '../services/validation.js';
-import {renderTemplate,DEFAULT_TEMPLATES} from '../services/whatsapp/templates.js';
 import {Screen,Section,Card,Row,Stat,Badge,Empty,Modal,Field} from '../components/ui.jsx';
 
 export const DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
@@ -95,7 +94,62 @@ export function Scanner(p){
  </Modal>
 }
 
-export function Student360(p){const profile=buildStudent360(p.data,p.student.id);const s=profile?.student||p.student;const grades=profile?.grades||[];const att=profile?.attendance||[];const payments=profile?.payments||[];const books=profile?.books||[];const reportText=renderTemplate(DEFAULT_TEMPLATES.result,{studentName:s.name,exam:'ملف الطالب',score:Math.round((p.avg(s)/100)*100),maxScore:100,percent:p.avg(s)})+`\nGENIUS ID: ${s.code}\nالمجموعة: ${p.groupBy(s.groupId)?.name||'—'}\nالمستحق: ${money(p.due(s))}`;return <Modal title={`Student 360 — ${s.name}`} close={()=>p.setModal(null)}><div className="studentHero"><div className="avatar">{s.name?.slice(0,1)}</div><div><h2>{s.name}</h2><small>GENIUS ID: {s.code}</small><p>{p.groupBy(s.groupId)?.name||'بدون مجموعة'} • {s.grade}</p></div></div><div className="actions"><button className="btn" onClick={()=>{p.setSelected(s);p.setModal('student')}}><I.Pencil size={16}/> تعديل بيانات الطالب</button><button className="btn secondary" onClick={()=>{p.setSelected(s);p.setModal('card')}}>بطاقة + QR</button></div><div className="actions"><button className="btn secondary" onClick={()=>{p.setSelected(s);p.setModal('report')}}><I.FileText size={16}/> تقرير مخصص لولي الأمر</button><button className="btn secondary" onClick={()=>window.print()}>طباعة</button></div><div className="stats"><Stat n={`${p.attendanceRate(s)}%`} l="الحضور"/><Stat n={`${p.avg(s)}%`} l="متوسط الدرجات"/><Stat n={money(p.due(s))} l="المتبقي"/><Stat n={payments.filter(x=>x.type==='PAYMENT').length} l="دفعات"/></div><Section title="بيانات الطالب"><div className="detailGrid"><span>ولي الأمر</span><b>{s.parentName||'—'}</b><span>هاتف الطالب</span><b>{s.studentPhone||'—'}</b><span>هاتف ولي الأمر</span><b>{s.parentPhone||'—'}</b><span>المستوى</span><b>{s.level||'—'}</b><span>ملاحظات</span><b>{s.notes||'—'}</b></div></Section><Section title={`الحضور (${att.length})`}><div className="list">{att.slice(-12).reverse().map(a=><Row key={a.id} title={a.status} sub={new Date(a.time||Date.now()).toLocaleString('ar-EG')}/>)}</div></Section><Section title={`الدرجات (${grades.length})`}><div className="list">{grades.map(g=><Row key={g.id} title={p.data.exams.find(e=>e.id===g.examId)?.title||'امتحان'} sub={`${g.score}/${g.maxScore}`}/>)}</div></Section><Section title={`المالية (${payments.length})`}><div className="list">{payments.map(x=><Row key={x.id} title={`${x.type==='CHARGE'?'مستحق':'دفعة'} — ${money(x.amount)}`} sub={`${fmtDate(x.date)} • ${x.note||x.method||''}`}/>)}</div></Section><Section title={`الكتب (${books.length})`}><div className="list">{books.map(x=><Row key={x.id} title={p.data.books.find(b=>b.id===x.bookId)?.title||'كتاب'} sub={x.status}/>)}</div></Section><Section title="السجل الزمني"><div className="list">{profile.timeline.slice(0,20).map((x,i)=><Row key={x.ref+'_'+i} title={x.label} sub={fmtDate(x.date)}/>)}</div></Section></Modal>}
+export function Student360(p){
+ const profile=buildStudent360(p.data,p.student.id);
+ const s=profile?.student||p.student;
+ const grades=profile?.grades||[];
+ const att=profile?.attendance||[];
+ const payments=profile?.payments||[];
+ const books=profile?.books||[];
+ const [addExamId,setAddExamId]=useState('');
+ const availableExams=p.data.exams.filter(e=>active(e)&&(e.groupIds||[]).includes(s.groupId)&&!grades.some(g=>g.examId===e.id));
+ const addGrade=async()=>{
+  if(!addExamId)return;
+  const exam=p.data.exams.find(e=>e.id===addExamId);
+  await p.write('grades',{id:uid2('gr'),examId:addExamId,studentId:s.id,score:'',maxScore:exam?.maxScore||0,academicYearId:p.yearId},'إضافة درجة من الملف');
+  setAddExamId('');
+ };
+ const editPayment=async x=>{
+  const v=prompt('تعديل المبلغ (بالجنيه)',x.amount);
+  if(v===null)return;
+  const n=Number(v);
+  if(!n||n<=0)return p.notify('مبلغ غير صحيح');
+  await p.write('payments',{...x,amount:n},'تعديل قيد مالي من الملف');
+ };
+ const openBook=book=>{if(!book)return;p.setPresetStudentId(s.id);p.setSelected(book);p.setModal('bookView')};
+ return <Modal title={`Student 360 — ${s.name}`} close={()=>p.setModal(null)}>
+  <div className="studentHero"><div className="avatar">{s.name?.slice(0,1)}</div><div><h2>{s.name}</h2><small>GENIUS ID: {s.code}</small><p>{p.groupBy(s.groupId)?.name||'بدون مجموعة'} • {s.grade}</p></div></div>
+  <div className="actions"><button className="btn" onClick={()=>{p.setSelected(s);p.setModal('student')}}><I.Pencil size={16}/> تعديل بيانات الطالب</button><button className="btn secondary" onClick={()=>{p.setSelected(s);p.setModal('card')}}>بطاقة + QR</button></div>
+  <div className="actions"><button className="btn secondary" onClick={()=>{p.setSelected(s);p.setModal('report')}}><I.FileText size={16}/> تقرير مخصص لولي الأمر</button><button className="btn secondary" onClick={()=>window.print()}>طباعة</button></div>
+  <div className="stats"><Stat n={`${p.attendanceRate(s)}%`} l="الحضور"/><Stat n={`${p.avg(s)}%`} l="متوسط الدرجات"/><Stat n={money(p.due(s))} l="المتبقي"/><Stat n={payments.filter(x=>x.type==='PAYMENT').length} l="دفعات"/></div>
+  <Section title="بيانات الطالب"><div className="detailGrid"><span>ولي الأمر</span><b>{s.parentName||'—'}</b><span>هاتف الطالب</span><b>{s.studentPhone||'—'}</b><span>هاتف ولي الأمر</span><b>{s.parentPhone||'—'}</b><span>المستوى</span><b>{s.level||'—'}</b><span>ملاحظات</span><b>{s.notes||'—'}</b></div></Section>
+
+  <Section title={`الحضور (${att.length}) — قابل للتعديل`}>
+   <div className="list">{att.slice(-12).reverse().map(a=>{const sess=p.data.sessions.find(x=>x.id===a.sessionId);return <div className="rowItem" key={a.id}><div><b>{sess?fmtDate(sess.date):new Date(a.time||Date.now()).toLocaleDateString('ar-EG')}</b><small>{p.groupBy(sess?.groupId)?.name||''} {sess?.timeStart||''}</small></div><select className="input smallInput" value={a.status} onChange={e=>p.write('attendance',{...a,status:e.target.value,billable:e.target.value!=='غائب'},'تعديل حضور من الملف')}><option>حاضر</option><option>متأخر</option><option>غائب</option></select></div>})}</div>
+   {!att.length&&<Empty text="لا يوجد سجل حضور بعد"/>}
+  </Section>
+
+  <Section title={`الدرجات (${grades.length}) — قابلة للتعديل`}>
+   <div className="list">{grades.map(g=><div className="gradeRow" key={g.id}><div><b>{p.data.exams.find(e=>e.id===g.examId)?.title||'امتحان'}</b><small>من {g.maxScore}</small></div><input className="input gradeInput" inputMode="decimal" type="number" min="0" max={g.maxScore} value={g.score??''} onChange={e=>p.write('grades',{...g,score:e.target.value===''?'':Number(e.target.value)},'تعديل درجة من الملف')}/></div>)}</div>
+   {!grades.length&&<Empty text="لا توجد درجات بعد"/>}
+   {availableExams.length>0&&<div className="row"><select className="input" value={addExamId} onChange={e=>setAddExamId(e.target.value)}><option value="">+ اختر امتحانًا لإضافة درجة</option>{availableExams.map(e=><option key={e.id} value={e.id}>{e.title}</option>)}</select><button className="btn secondary" onClick={addGrade}>إضافة</button></div>}
+  </Section>
+
+  <Section title={`المالية (${payments.length})`}>
+   <div className="actions"><button className="btn" onClick={()=>p.setModal('payment')}><I.Banknote size={16}/> تسجيل دفعة جديدة</button></div>
+   <div className="list">{payments.map(x=><div className="rowItem" key={x.id}><div><b>{x.type==='CHARGE'?'مستحق':'دفعة'} — {money(x.amount)}</b><small>{fmtDate(x.date)} • {x.note||x.method||''}</small></div><div className="actions"><button className="btn secondary" onClick={()=>editPayment(x)}>تعديل</button><button className="danger" onClick={()=>p.softDelete('payments',x.id,'حذف قيد مالي من الملف')}>حذف</button></div></div>)}</div>
+   {!payments.length&&<Empty text="لا يوجد سجل مالي بعد"/>}
+  </Section>
+
+  <Section title={`الكتب (${books.length})`}>
+   <div className="actions"><button className="btn secondary" onClick={()=>{p.setPresetStudentId(s.id);p.setModal('quickBooks')}}><I.BookOpen size={16}/> إضافة / تسليم كتاب</button></div>
+   <div className="list">{books.map(x=>{const book=p.data.books.find(b=>b.id===x.bookId);return <div className="rowItem" key={x.id}><div><b>{book?.title||'كتاب'}</b><small>{x.status}</small></div><button className="btn secondary" onClick={()=>openBook(book)}>تعديل</button></div>})}</div>
+   {!books.length&&<Empty text="لا توجد كتب مسجلة بعد"/>}
+  </Section>
+
+  <Section title="السجل الزمني"><div className="list">{profile.timeline.slice(0,20).map((x,i)=><Row key={x.ref+'_'+i} title={x.label} sub={fmtDate(x.date)}/>)}</div></Section>
+ </Modal>;
+}
 
 
 export function ReportForm(p){
@@ -128,7 +182,7 @@ export function ReportForm(p){
   </Modal>;
 }
 
-export function StudentCard(p){const s=p.student;const [qr,setQr]=useState('');const barRef=React.useRef(null);useEffect(()=>{QRCode.toDataURL(JSON.stringify({geniusId:s.code,name:s.name,groupId:s.groupId}),{width:260,margin:1,errorCorrectionLevel:'M'}).then(setQr);if(barRef.current){try{JsBarcode(barRef.current,s.code,{format:'CODE128',displayValue:true,height:52,width:2,margin:8,fontSize:14})}catch{}}},[s]);const text=`GENIUS BIOLOGY\n${s.name}\nGENIUS ID: ${s.code}\nالمجموعة: ${p.groupBy(s.groupId)?.name||'—'}`;const shareQr=async()=>{if(!qr)return;const ok=await shareImageDataUrl(qr,`GENIUS_${s.code}_QR.png`,`بطاقة ${s.name}`);if(ok)p.notify('تم فتح مشاركة صورة QR');else p.notify('تعذرت مشاركة الصورة — جرّب لقطة شاشة')};const shareBarcode=async()=>{if(!barRef.current)return;try{const png=await svgToPngDataUrl(barRef.current);const ok=await shareImageDataUrl(png,`GENIUS_${s.code}_BARCODE.png`,`باركود ${s.name}`);if(ok)p.notify('تم فتح مشاركة صورة الباركود');else p.notify('تعذرت مشاركة الصورة')}catch{p.notify('تعذرت مشاركة الصورة')}};return <Modal title="بطاقة GENIUS ID" close={()=>p.setModal(null)}><div className="studentCard"><div className="cardBrand">GENIUS BIOLOGY <span>GENIUS ADMIN • STUDENT ID</span></div><h2>{s.name}</h2><div className="idBig">{s.code}</div><p>{p.groupBy(s.groupId)?.name||'—'} • {s.grade||'—'}</p>{qr&&<img src={qr} alt="GENIUS QR"/>}<svg ref={barRef} aria-label={`Barcode ${s.code}`}></svg><small>QR وCode 128 مرتبطان بـ GENIUS ID فقط</small></div><div className="actions"><button className="btn" onClick={shareQr}><I.QrCode size={16}/> مشاركة صورة QR</button><button className="btn secondary" onClick={shareBarcode}><I.Barcode size={16}/> مشاركة صورة الباركود</button></div><div className="actions"><button className="btn secondary" onClick={async()=>{const ok=await shareText('GENIUS ID',text);if(!ok){await navigator.clipboard?.writeText(text);p.notify('تم نسخ بيانات البطاقة')}}}>مشاركة النص</button><button className="btn secondary" onClick={()=>{navigator.clipboard?.writeText(s.code);p.notify('تم نسخ ID')}}>نسخ ID</button><button className="btn secondary" onClick={()=>p.whatsapp(s.parentPhone,text)}>WhatsApp</button><button className="btn secondary" onClick={()=>window.print()}>طباعة</button></div></Modal>}
+export function StudentCard(p){const s=p.student;const tpl=p.settings?.cardTemplate||'classic';const [qr,setQr]=useState('');const barRef=React.useRef(null);useEffect(()=>{QRCode.toDataURL(JSON.stringify({geniusId:s.code,name:s.name,groupId:s.groupId}),{width:260,margin:1,errorCorrectionLevel:'M'}).then(setQr);if(barRef.current){try{JsBarcode(barRef.current,s.code,{format:'CODE128',displayValue:true,height:52,width:2,margin:8,fontSize:14})}catch{}}},[s]);const text=`GENIUS BIOLOGY\n${s.name}\nGENIUS ID: ${s.code}\nالمجموعة: ${p.groupBy(s.groupId)?.name||'—'}`;const shareQr=async()=>{if(!qr)return;const ok=await shareImageDataUrl(qr,`GENIUS_${s.code}_QR.png`,`بطاقة ${s.name}`);if(ok)p.notify('تم فتح مشاركة صورة QR');else p.notify('تعذرت مشاركة الصورة — جرّب لقطة شاشة')};const shareBarcode=async()=>{if(!barRef.current)return;try{const png=await svgToPngDataUrl(barRef.current);const ok=await shareImageDataUrl(png,`GENIUS_${s.code}_BARCODE.png`,`باركود ${s.name}`);if(ok)p.notify('تم فتح مشاركة صورة الباركود');else p.notify('تعذرت مشاركة الصورة')}catch{p.notify('تعذرت مشاركة الصورة')}};return <Modal title="بطاقة GENIUS ID" close={()=>p.setModal(null)}><div className={`studentCard tpl-${tpl}`}><div className="cardBrand">GENIUS BIOLOGY <span>GENIUS ADMIN • STUDENT ID</span></div><h2>{s.name}</h2><div className="idBig">{s.code}</div><p>{p.groupBy(s.groupId)?.name||'—'} • {s.grade||'—'}</p>{qr&&<img src={qr} alt="GENIUS QR"/>}<svg ref={barRef} aria-label={`Barcode ${s.code}`}></svg><small>QR وCode 128 مرتبطان بـ GENIUS ID فقط</small></div><div className="actions"><button className="btn" onClick={shareQr}><I.QrCode size={16}/> مشاركة صورة QR</button><button className="btn secondary" onClick={shareBarcode}><I.Barcode size={16}/> مشاركة صورة الباركود</button></div><div className="actions"><button className="btn secondary" onClick={async()=>{const ok=await shareText('GENIUS ID',text);if(!ok){await navigator.clipboard?.writeText(text);p.notify('تم نسخ بيانات البطاقة')}}}>مشاركة النص</button><button className="btn secondary" onClick={()=>{navigator.clipboard?.writeText(s.code);p.notify('تم نسخ ID')}}>نسخ ID</button><button className="btn secondary" onClick={()=>p.whatsapp(s.parentPhone,text)}>WhatsApp</button><button className="btn secondary" onClick={()=>window.print()}>طباعة</button></div></Modal>}
 
 
 export function StudentForm(p){const old=p.selected;const [f,setF]=useState(old||{id:uid2('st'),code:'',name:'',grade:p.dict('grades')[0]||'',academicYearId:p.yearId,groupId:p.presetGroupId||p.groups[0]?.id||'',branchId:p.branchId==='ALL'?p.groups[0]?.branchId||'':p.branchId,status:'نشط',studentPhone:'',parentName:'',parentPhone:'',joinDate:today(),price:0,discountType:'NONE',discountValue:0,level:p.dict('levels')[0]||'',notes:''});useEffect(()=>{if(!f.code&&!old){const y=p.data.academicYears.find(x=>x.id===p.yearId);const nums=p.students.map(s=>Number(String(s.code).replace(/\D/g,''))||0);const max=Math.max(0,...nums);const g=p.groupBy(f.groupId);setF(x=>({...x,code:`${y?.shortCode||'27'}${String(max+1).slice(-4).padStart(4,'0')}`,price:x.price||g?.price||0}))}},[f.code,old,p.data.academicYears,p.yearId,p.students]);
@@ -293,7 +347,8 @@ export function BookForm(p){const [f,setF]=useState({title:'',type:p.dict('bookT
 
 
 export function BookView(p){
- const [sid,setSid]=useState('');
+ const [sid,setSid]=useState(p.presetStudentId||'');
+ useEffect(()=>{if(p.presetStudentId)p.setPresetStudentId('')},[]);
  const statuses=p.dict('bookStatuses');
  const [status,setStatus]=useState(statuses[0]||'غير مدفوع وغير مستلم');
  const list=p.data.studentBooks.filter(x=>active(x)&&x.bookId===p.book.id);const inventory=bookInventory(p.data,p.book.id);
