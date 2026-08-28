@@ -530,3 +530,23 @@ img{max-width:100%;}
   display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
 }
 .calcGrid button{font-size:16px!important;font-weight:700!important;padding:14px 0!important;}
+
+/* ===================================================================
+   21) قوالب بطاقة الطالب (Classic / Bold / Compact)
+=================================================================== */
+.studentCard.tpl-bold{
+  background:linear-gradient(165deg,var(--accent) 0%,var(--accent-strong) 48%,var(--panel) 48%);
+  border:none;color:#fff;
+}
+.studentCard.tpl-bold .cardBrand,.studentCard.tpl-bold h2,.studentCard.tpl-bold .idBig{color:#fff;}
+.studentCard.tpl-bold .cardBrand span{color:rgba(255,255,255,.75);}
+.studentCard.tpl-bold p{color:rgba(255,255,255,.85);}
+.studentCard.tpl-bold small{color:rgba(255,255,255,.7);}
+
+.studentCard.tpl-compact{
+  flex-direction:row;align-items:center;text-align:right;gap:14px;padding:14px;
+}
+.studentCard.tpl-compact .idBig{font-size:18px;}
+.studentCard.tpl-compact img{width:92px;height:92px;flex-shrink:0;}
+.studentCard.tpl-compact svg{display:none;}
+.studentCard.tpl-compact small{display:none;}
