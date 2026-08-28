@@ -5,13 +5,14 @@ import { all, put, snapshot, restore, uid, today, stores, isActive as active } f
 import { globalSearch, createMonthlyCharges } from '../services.js';
 import { uid2, egPhone } from '../utils/format.js';
 import { validBackup, uniqueCodes } from '../services/validation.js';
-import { writeTextFile, shareFile, haptic, configureNative } from '../native.js';
+import { writeTextFile, shareFile, haptic, configureNative, scheduleLocalNotifications } from '../native.js';
 import { makeBackupEnvelope, verifyBackupEnvelope, backupFilename } from '../engines/backup/index.js';
 import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
+import { Login, Dashboard, Students, Groups, Schedule, daySessions, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
+import { Section } from '../components/ui.jsx';
 import '../style.css';
 
 export class ErrorBoundary extends React.Component {
@@ -51,19 +52,10 @@ function Modal({ title, close, children }) {
   );
 }
 
-function Section({ title, children }) {
-  return (
-    <div className="menuSection" style={{ marginBottom: '1rem' }}>
-      {title && <h4 style={{ margin: '0 0 0.5rem 0', opacity: 0.8, fontSize: '0.9rem' }}>{title}</h4>}
-      {children}
-    </div>
-  );
-}
-
 const NAV=[['dashboard','الرئيسية',I.LayoutDashboard],['students','الطلاب',I.Users],['groups','المجموعات',I.Layers3],['schedule','الجدول',I.CalendarDays],['finance','المالية',I.Wallet],['reports','التقارير',I.BarChart3],['settings','الإعدادات',I.Settings]];
 
 function MainApp(){
- const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[presetGroupId,setPresetGroupId]=useState(''),[scanSession,setScanSession]=useState(null),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
+ const [data,setData]=useState(null),[page,setPage]=useState('dashboard'),[yearId,setYearId]=useState(''),[branchId,setBranchId]=useState('ALL'),[modal,setModal]=useState(null),[selected,setSelected]=useState(null),[presetGroupId,setPresetGroupId]=useState(''),[presetStudentId,setPresetStudentId]=useState(''),[scanSession,setScanSession]=useState(null),[toast,setToast]=useState(''),[theme,setTheme]=useState('dark'),[globalQuery,setGlobalQuery]=useState(''),[locked,setLocked]=useState(()=>sessionStorage.getItem('genius_auth')!=='1'),[query,setQuery]=useState('');
  const notify=useCallback(m=>{setToast(m);window.clearTimeout(window.__gaToast);const dur=String(m).includes('\n')?4200:2600;window.__gaToast=window.setTimeout(()=>setToast(''),dur)},[]);
  const load=useCallback(async()=>{
    const x={};
@@ -262,6 +254,21 @@ function MainApp(){
    }).catch(()=>{});
  },[data,locked,settings.notificationsEnabled]);
 
+ useEffect(()=>{
+   if(!data||locked||!settings.notificationsEnabled)return;
+   const rows=daySessions({data,groups,students,groupBy},today()).filter(r=>r.status!=='CANCELLED');
+   const items=[];
+   for(const row of rows){
+     const [h,m]=String(row.timeStart||'0:0').split(':').map(Number);
+     const at=new Date();at.setHours(h,(m||0)-5,0,0);
+     if(at.getTime()<=Date.now())continue;
+     let hash=0;const key=`${row.groupId}_${row.date}_${row.timeStart}`;
+     for(let i=0;i<key.length;i++)hash=(hash*31+key.charCodeAt(i))|0;
+     items.push({id:Math.abs(hash)%2147483647,title:'GENIUS ADMIN',body:`حصة ${row.group?.name||groupBy(row.groupId)?.name||''} تبدأ بعد 5 دقائق`,schedule:{at}});
+   }
+   if(items.length)scheduleLocalNotifications(items).catch(()=>{});
+ },[data?.sessions,data?.groups,locked,settings.notificationsEnabled,groups,students,groupBy]);
+
  if(!data)return (
    <div className="splash" dir="rtl">
      <div className="splashIcon"><I.Cpu size={48}/></div>
@@ -272,7 +279,7 @@ function MainApp(){
 
  if(locked)return <Login settings={settings} onOk={()=>{sessionStorage.setItem('genius_auth','1');setLocked(false)}}/>;
  const go=id=>setPage(id);
- const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,presetGroupId,setPresetGroupId,scanSession,setScanSession,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
+ const pageProps={data,settings,groups,students,groupBy,studentBy,dict,due,attendanceRate,avg,yearId,branchId,setBranchId,setYearId,setModal,setSelected,selected,presetGroupId,setPresetGroupId,presetStudentId,setPresetStudentId,scanSession,setScanSession,query,setQuery,write,softDelete,notify,buzz,whatsapp,exportXlsx,importStudents,backup,restoreFile,scheduleSessions,go};
 
  return (
    <div className={`app ${theme}`} dir="rtl">
@@ -376,7 +383,7 @@ function MainApp(){
     {modal==='card'&&selected&&<StudentCard {...pageProps} student={selected}/>} 
     {modal==='report'&&selected&&<ReportForm {...pageProps}/>} 
     {modal==='group'&&<GroupForm {...pageProps}/>} 
-    {modal==='groupView'&&selected&&<GroupView {...pageProps}/>}
+    {modal==='groupView'&&selected&&<GroupView {...pageProps}/>} 
     {modal==='session'&&<SessionForm {...pageProps}/>} 
     {modal==='attendance'&&selected&&<AttendanceModal {...pageProps} session={selected}/>} 
     {modal==='payment'&&<PaymentForm {...pageProps}/>} 
@@ -393,7 +400,7 @@ function MainApp(){
     {modal==='calculator'&&<Calculator {...pageProps}/>} 
     {modal==='quickGrades'&&<QuickGrades {...pageProps}/>} 
     {modal==='quickBooks'&&<QuickBooks {...pageProps}/>} 
-    {modal==='quickSubscriptions'&&<QuickSubscriptions {...pageProps}/>}
+    {modal==='quickSubscriptions'&&<QuickSubscriptions {...pageProps}/>} 
     {modal==='scan'&&<Scanner {...pageProps}/>} 
    </div>
  );
