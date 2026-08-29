@@ -3,12 +3,13 @@ import * as I from 'lucide-react';
 import {today,mins,money,uid2} from '../utils/format.js';
 import {verifyPin} from '../services/security.js';
 import {isActive as active} from '../db.js';
+import {inventory as bookInventory} from '../engines/books/engine.js';
 import {Screen,Section,Card,Row,Stat,Badge,Empty} from '../components/ui.jsx';
 
 /* حصص اليوم تُحسب مباشرة من مواعيد المجموعات النشطة (بدون توليد جدول مسبق).
    لو فيه حصة حقيقية مسجلة بالفعل لنفس اليوم والمعاد، بتتاخد بياناتها (حالتها الفعلية)،
    ولو لأ، بيتعمل صف "افتراضي" لحد ما المستخدم يفتحه فعليًا فيتسجل وقتها بس. */
-function daySessions(ctx,dt){
+export function daySessions(ctx,dt){
  const day=new Date(`${dt}T00:00:00`).toLocaleDateString('ar-EG',{weekday:'long'});
  const rows=[];
  for(const g of ctx.groups.filter(g=>g.status==='ACTIVE')){
@@ -24,7 +25,7 @@ function daySessions(ctx,dt){
  }
  return rows.sort((a,b)=>mins(a.timeStart)-mins(b.timeStart));
 }
-async function ensureSession(ctx,row){
+export async function ensureSession(ctx,row){
  if(!row.virtual)return row;
  const s={id:uid2('ses'),groupId:row.groupId,academicYearId:row.academicYearId||ctx.yearId,date:row.date,day:row.day,timeStart:row.timeStart,timeEnd:row.timeEnd,status:'UPCOMING'};
  await ctx.write('sessions',s,'إنشاء حصة من الجدول');
@@ -40,6 +41,21 @@ export function Students(p){const [status,setStatus]=useState('ALL');const [grou
 
 
 export function Groups(p){const list=p.groups.filter(g=>[g.name,g.code,p.data.branches.find(b=>b.id===g.branchId)?.name].some(v=>String(v||'').toLowerCase().includes(p.query.toLowerCase())));return <Screen title="المجموعات" action={<button className="btn" onClick={()=>{p.setSelected(null);p.setModal('group')}}><I.Plus/> مجموعة</button>}><input className="input" value={p.query} onChange={e=>p.setQuery(e.target.value)} placeholder="ابحث عن مجموعة أو فرع"/><div className="list">{list.map(g=><Card key={g.id} onClick={()=>{p.setSelected(g);p.setModal('groupView')}}><div className="between"><div><h3>{g.name}</h3><small>{g.code} • {g.grade} • {p.data.branches.find(b=>b.id===g.branchId)?.name||''}</small></div><Badge t={g.status==='ACTIVE'?'نشطة':'موقوفة'}/></div><p>{(g.schedule||[]).map(x=>`${x.day} ${x.start}–${x.end}`).join(' • ')}</p><div className="between"><small>{p.students.filter(s=>s.groupId===g.id&&s.status==='نشط').length}/{g.maxStudents} طالب</small><b>{money(g.price)} {g.pricingModel==='MONTHLY'?'شهري':'للحصة'}</b></div><div className="actions"><button className="btn" onClick={e=>{e.stopPropagation();p.setSelected(g);p.setModal('group')}}>تعديل</button><button className="btn secondary" onClick={e=>{e.stopPropagation();p.write('groups',{...g,status:g.status==='ACTIVE'?'INACTIVE':'ACTIVE'},'تغيير حالة المجموعة')}}>{g.status==='ACTIVE'?'إيقاف':'تفعيل'}</button><button className="btn secondary" onClick={e=>{e.stopPropagation();p.setSelected(g);p.setModal('session')}}>حصة</button></div></Card>)}</div></Screen>}
+
+
+export function Books(p){
+ const list=p.data.books.filter(active).map(b=>({book:b,inv:bookInventory(p.data,b.id)})).filter(x=>[x.book.title,x.book.type].some(v=>String(v||'').toLowerCase().includes(p.query.toLowerCase())));
+ const totalRevenue=list.reduce((a,x)=>a+x.inv.revenue,0);
+ const totalCost=list.reduce((a,x)=>a+x.inv.cost,0);
+ const totalProfit=totalRevenue-totalCost;
+ const lowStockCount=list.filter(x=>x.inv.lowStock).length;
+ return <Screen title="مخزن الكتب والمطبوعات" action={<button className="btn" onClick={()=>{p.setSelected(null);p.setModal('book')}}><I.Plus/> كتاب</button>}>
+  <div className="stats"><Stat n={money(totalRevenue)} l="إجمالي الإيراد"/><Stat n={money(totalCost)} l="إجمالي التكلفة"/><Stat n={money(totalProfit)} l="صافي الربح"/><Stat n={lowStockCount} l="كتب قاربت تخلص"/></div>
+  <input className="input" value={p.query} onChange={e=>p.setQuery(e.target.value)} placeholder="ابحث عن كتاب"/>
+  <div className="list">{list.map(({book,inv})=><Card key={book.id} onClick={()=>{p.setSelected(book);p.setModal('bookView')}}><div className="between"><div><h3>{book.title}</h3><small>{book.type} • {money(book.price)} للطالب</small></div>{inv.lowStock&&<Badge t="مخزون منخفض"/>}</div><div className="mini"><Stat n={inv.available} l="متاح"/><Stat n={inv.delivered} l="تم تسليمه"/><Stat n={money(inv.profit)} l="صافي الربح"/></div></Card>)}</div>
+  {!list.length&&<Empty text="لا توجد كتب مسجلة بعد"/>}
+ </Screen>;
+}
 
 
 export function Schedule(p){
