@@ -11,7 +11,7 @@ import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
+import { Login, Dashboard, Students, Groups, Books, Schedule, daySessions, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
 import { Section } from '../components/ui.jsx';
 import '../style.css';
 
@@ -370,6 +370,7 @@ function MainApp(){
       {page==='dashboard'&&<Dashboard {...pageProps}/>} 
       {page==='students'&&<Students {...pageProps}/>} 
       {page==='groups'&&<Groups {...pageProps}/>} 
+      {page==='books'&&<Books {...pageProps}/>}
       {page==='schedule'&&<Schedule {...pageProps}/>} 
       {page==='finance'&&<Finance {...pageProps}/>} 
       {page==='reports'&&<Reports {...pageProps}/>} 
@@ -404,7 +405,7 @@ function MainApp(){
         </Section>
         <Section title="التنقل">
           <div className="menuGrid">
-            {[['reports','التقارير',I.BarChart3],['notifications','الإشعارات',I.Bell],['activity','سجل العمليات',I.History],['archive','الأرشيف',I.Archive],['settings','الإعدادات',I.Settings]].map(([id,l,Icon])=>(
+            {[['reports','التقارير',I.BarChart3],['books','مخزن الكتب',I.BookOpen],['notifications','الإشعارات',I.Bell],['activity','سجل العمليات',I.History],['archive','الأرشيف',I.Archive],['settings','الإعدادات',I.Settings]].map(([id,l,Icon])=>(
               <button key={id} className="menuItem" onClick={()=>{setModal(null);go(id)}}>
                 <Icon size={22}/>
                 <span>{l}</span>
