@@ -59,7 +59,32 @@ export async function markAttendance(p,session,s,status){
  else p.notify(buildWelcome(p,s));
 }
 
-export function AttendanceModal(p){const groupStudents=p.students.filter(s=>s.groupId===p.session.groupId&&s.status==='نشط');const attendanceRows=p.data.attendance.filter(x=>active(x)&&x.sessionId===p.session.id);const attendanceSummary=attendanceStats(attendanceRows);const [code,setCode]=useState('');const [suggestions,setSuggestions]=useState([]);const [tab,setTab]=useState('attendance');const mark=(s,status)=>markAttendance(p,p.session,s,status);const doSearch=v=>{setCode(v);const q=v.trim();if(!q){setSuggestions([]);return}const exact=groupStudents.find(x=>x.code===q);if(exact){mark(exact,'حاضر');setCode('');setSuggestions([]);return}setSuggestions(groupStudents.filter(x=>x.name.includes(q)).slice(0,5))};const pickSuggestion=s=>{mark(s,'حاضر');setCode('');setSuggestions([])};const scan=()=>{p.setScanSession(p.session);p.setModal('scan')};const lifecycle=async next=>{if(next==='OPEN'){for(const row of ensureSessionAttendance(p.data,p.session))await p.write('attendance',row,'تهيئة حضور الحصة')}const updated=next==='OPEN'?openSession(p.session):completeSession(p.session);await p.write('sessions',updated,next==='OPEN'?'فتح الحصة':'إنهاء الحصة');p.setSelected(updated);p.notify(next==='OPEN'?'تم فتح الحصة':'تم إنهاء الحصة')};const summary=sessionSummary(p.data,p.session.id);return <Modal title={`حصة — ${p.groupBy(p.session.groupId)?.name||''}`} close={()=>p.setModal(null)}><div className="between"><span className="badge">{p.session.status||'UPCOMING'}</span><div className="actions">{p.session.status!=='OPEN'&&p.session.status!=='COMPLETED'&&<button className="btn" onClick={()=>lifecycle('OPEN')}>فتح الحصة</button>}{p.session.status==='OPEN'&&<button className="btn secondary" onClick={()=>lifecycle('COMPLETED')}>إنهاء الحصة</button>}</div></div><div className="tabs"><button className={tab==='attendance'?'active':''} onClick={()=>setTab('attendance')}>الحضور</button><button className={tab==='data'?'active':''} onClick={()=>setTab('data')}>بيانات</button><button className={tab==='grades'?'active':''} onClick={()=>setTab('grades')}>الدرجات</button></div>{tab==='attendance'&&<><div className="actions"><button className="btn" onClick={scan}><I.ScanLine/> Scan ID (مستمر)</button><input className="input codeInput" placeholder="اكتب ID أو اسم الطالب" value={code} onChange={e=>doSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&suggestions.length===1)pickSuggestion(suggestions[0])}}/><button className="btn secondary" onClick={async()=>{for(const s of groupStudents)await mark(s,'حاضر');}}>الكل حاضر</button></div>{suggestions.length>0&&<div className="checkList">{suggestions.map(s=><button key={s.id} type="button" className="pill" onClick={()=>pickSuggestion(s)}>{s.name}</button>)}</div>}<div className="list">{groupStudents.map(s=>{const a=p.data.attendance.find(x=>active(x)&&x.id===`${p.session.id}_${s.id}`);return <div className="rowItem" key={s.id}><div><b>{s.name}</b><small>{s.code} • {a?.status||'لم يسجل'}</small></div><div className="attendanceActions"><button className={a?.status==='حاضر'?'pill activePill':'pill'} onClick={()=>mark(s,'حاضر')}>حاضر</button><button className={a?.status==='متأخر'?'pill activePill':'pill'} onClick={()=>mark(s,'متأخر')}>متأخر</button><button className={a?.status==='غائب'?'pill activePill':'pill'} onClick={()=>mark(s,'غائب')}>غائب</button></div></div>})}</div></>}{tab==='data'&&<div className="stats"><Stat n={groupStudents.length} l="إجمالي"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status!=='غائب')).length} l="حاضر"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status==='غائب')).length} l="غائب"/><Stat n={money(summary.collection)} l="تحصيل الحصة"/><Stat n={`${attendanceSummary.rate}%`} l="النسبة"/></div>}{tab==='grades'&&<p className="hint">لإدارة درجات الامتحانات افتح شاشة الامتحانات؛ الدرجة تحفظ تلقائيًا في سجل كل طالب.</p>}</Modal>}
+export function AttendanceModal(p){
+ const groupStudents=p.students.filter(s=>s.groupId===p.session.groupId&&s.status==='نشط');
+ const attendanceRows=p.data.attendance.filter(x=>active(x)&&x.sessionId===p.session.id);
+ const attendanceSummary=attendanceStats(attendanceRows);
+ const [code,setCode]=useState('');const [suggestions,setSuggestions]=useState([]);const [tab,setTab]=useState('attendance');
+ const mark=(s,status)=>markAttendance(p,p.session,s,status);
+ const doSearch=v=>{setCode(v);const q=v.trim();if(!q){setSuggestions([]);return}const exact=groupStudents.find(x=>x.code===q);if(exact){mark(exact,'حاضر');setCode('');setSuggestions([]);return}setSuggestions(groupStudents.filter(x=>x.name.includes(q)).slice(0,5))};
+ const pickSuggestion=s=>{mark(s,'حاضر');setCode('');setSuggestions([])};
+ const scan=()=>{p.setScanSession(p.session);p.setModal('scan')};
+ const lifecycle=async next=>{if(next==='OPEN'){for(const row of ensureSessionAttendance(p.data,p.session))await p.write('attendance',row,'تهيئة حضور الحصة')}const updated=next==='OPEN'?openSession(p.session):completeSession(p.session);await p.write('sessions',updated,next==='OPEN'?'فتح الحصة':'إنهاء الحصة');p.setSelected(updated);p.notify(next==='OPEN'?'تم فتح الحصة':'تم إنهاء الحصة')};
+ const summary=sessionSummary(p.data,p.session.id);
+ const recLevels=p.dict('recitationLevels');
+ const setRecitation=async(s,level)=>{await p.write('recitations',{id:`${p.session.id}_${s.id}`,sessionId:p.session.id,studentId:s.id,groupId:p.session.groupId,date:p.session.date,level,academicYearId:p.session.academicYearId},'تسجيل تسميع');p.notify(`تسميع ${s.name}: ${level}`)};
+ return <Modal title={`حصة — ${p.groupBy(p.session.groupId)?.name||''}`} close={()=>p.setModal(null)}>
+  <div className="between"><span className="badge">{p.session.status||'UPCOMING'}</span><div className="actions">{p.session.status!=='OPEN'&&p.session.status!=='COMPLETED'&&<button className="btn" onClick={()=>lifecycle('OPEN')}>فتح الحصة</button>}{p.session.status==='OPEN'&&<button className="btn secondary" onClick={()=>lifecycle('COMPLETED')}>إنهاء الحصة</button>}</div></div>
+  <div className="tabs"><button className={tab==='attendance'?'active':''} onClick={()=>setTab('attendance')}>الحضور</button><button className={tab==='recitation'?'active':''} onClick={()=>setTab('recitation')}>التسميع</button><button className={tab==='data'?'active':''} onClick={()=>setTab('data')}>بيانات</button><button className={tab==='grades'?'active':''} onClick={()=>setTab('grades')}>الدرجات</button></div>
+  {tab==='attendance'&&<>
+   <div className="actions"><button className="btn" onClick={scan}><I.ScanLine/> Scan ID (مستمر)</button><input className="input codeInput" placeholder="اكتب ID أو اسم الطالب" value={code} onChange={e=>doSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&suggestions.length===1)pickSuggestion(suggestions[0])}}/><button className="btn secondary" onClick={async()=>{for(const s of groupStudents)await mark(s,'حاضر');}}>الكل حاضر</button></div>
+   {suggestions.length>0&&<div className="checkList">{suggestions.map(s=><button key={s.id} type="button" className="pill" onClick={()=>pickSuggestion(s)}>{s.name}</button>)}</div>}
+   <div className="list">{groupStudents.map(s=>{const a=p.data.attendance.find(x=>active(x)&&x.id===`${p.session.id}_${s.id}`);return <div className="rowItem" key={s.id}><div><b>{s.name}</b><small>{s.code} • {a?.status||'لم يسجل'}</small></div><div className="attendanceActions"><button className={a?.status==='حاضر'?'pill activePill':'pill'} onClick={()=>mark(s,'حاضر')}>حاضر</button><button className={a?.status==='متأخر'?'pill activePill':'pill'} onClick={()=>mark(s,'متأخر')}>متأخر</button><button className={a?.status==='غائب'?'pill activePill':'pill'} onClick={()=>mark(s,'غائب')}>غائب</button></div></div>})}</div>
+  </>}
+  {tab==='recitation'&&<div className="list">{groupStudents.map(s=>{const r=p.data.recitations?.find(x=>active(x)&&x.id===`${p.session.id}_${s.id}`);return <div className="rowItem" key={s.id}><div><b>{s.name}</b><small>{r?.level||'لم يُسجّل تسميع'}</small></div><select className="input smallInput" value={r?.level||''} onChange={e=>setRecitation(s,e.target.value)}><option value="">—</option>{recLevels.map(l=><option key={l}>{l}</option>)}</select></div>})}</div>}
+  {tab==='data'&&<div className="stats"><Stat n={groupStudents.length} l="إجمالي"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status!=='غائب')).length} l="حاضر"/><Stat n={groupStudents.filter(s=>p.data.attendance.find(a=>active(a)&&a.id===`${p.session.id}_${s.id}`&&a.status==='غائب')).length} l="غائب"/><Stat n={money(summary.collection)} l="تحصيل الحصة"/><Stat n={`${attendanceSummary.rate}%`} l="النسبة"/></div>}
+  {tab==='grades'&&<p className="hint">لإدارة درجات الامتحانات افتح شاشة الامتحانات؛ الدرجة تحفظ تلقائيًا في سجل كل طالب.</p>}
+ </Modal>;
+}
 
 
 export function Scanner(p){
@@ -147,6 +172,11 @@ export function Student360(p){
    {!books.length&&<Empty text="لا توجد كتب مسجلة بعد"/>}
   </Section>
 
+  <Section title={`التسميع اليومي (${(p.data.recitations||[]).filter(r=>active(r)&&r.studentId===s.id).length})`}>
+   <div className="list">{(p.data.recitations||[]).filter(r=>active(r)&&r.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12).map(r=><div className="rowItem" key={r.id}><div><b>{fmtDate(r.date)}</b><small>{p.groupBy(r.groupId)?.name||''}</small></div><select className="input smallInput" value={r.level} onChange={e=>p.write('recitations',{...r,level:e.target.value},'تعديل تسميع من الملف')}><option value="">—</option>{p.dict('recitationLevels').map(l=><option key={l}>{l}</option>)}</select></div>)}</div>
+   {!(p.data.recitations||[]).some(r=>active(r)&&r.studentId===s.id)&&<Empty text="لا يوجد سجل تسميع بعد — يُسجَّل من داخل الحصة"/>}
+  </Section>
+
   <Section title="السجل الزمني"><div className="list">{profile.timeline.slice(0,20).map((x,i)=><Row key={x.ref+'_'+i} title={x.label} sub={fmtDate(x.date)}/>)}</div></Section>
  </Modal>;
 }
@@ -154,7 +184,7 @@ export function Student360(p){
 
 export function ReportForm(p){
   const s=p.selected;const profile=buildStudent360(p.data,s.id);
-  const [sec,setSec]=useState({level:true,attendance:true,grades:true,finance:true,books:false});
+  const [sec,setSec]=useState({level:true,attendance:true,grades:true,finance:true,books:false,recitation:false});
   const [text,setText]=useState('');
   const build=useCallback(()=>{
     const lines=[`GENIUS BIOLOGY — تقرير الطالب`,`الاسم: ${s.name}`,`GENIUS ID: ${s.code}`,`المجموعة: ${p.groupBy(s.groupId)?.name||'—'}`];
@@ -163,10 +193,11 @@ export function ReportForm(p){
     if(sec.grades){const gr=(profile.grades||[]).slice(-5).reverse();lines.push(`متوسط الدرجات: ${p.avg(s)}%`,`آخر الامتحانات: ${gr.length?gr.map(g=>`${p.data.exams.find(e=>e.id===g.examId)?.title||'امتحان'}: ${g.score}/${g.maxScore}`).join('، '):'—'}`)}
     if(sec.finance){const pay=(profile.payments||[]).filter(x=>x.type==='PAYMENT').slice(-5).reverse();lines.push(`المتبقي: ${money(p.due(s))}`,`آخر الدفعات: ${pay.length?pay.map(x=>`${money(x.amount)} (${fmtDate(x.date)})`).join('، '):'—'}`)}
     if(sec.books){const bk=profile.books||[];lines.push(`الكتب: ${bk.length?bk.map(x=>`${p.data.books.find(b=>b.id===x.bookId)?.title||'كتاب'} — ${x.status}`).join('، '):'—'}`)}
+    if(sec.recitation){const rec=(p.data.recitations||[]).filter(x=>active(x)&&x.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);lines.push(`آخر التسميع: ${rec.length?rec.map(r=>`${r.level||'—'} (${fmtDate(r.date)})`).join('، '):'—'}`)}
     return lines.join('\n');
   },[s,p,profile,sec]);
   useEffect(()=>{setText(build())},[sec]);
-  const opts=[['level','المستوى'],['attendance','الحضور'],['grades','الدرجات'],['finance','المدفوعات'],['books','الكتب']];
+  const opts=[['level','المستوى'],['attendance','الحضور'],['grades','الدرجات'],['finance','المدفوعات'],['books','الكتب'],['recitation','التسميع']];
   return <Modal title={`تقرير — ${s.name}`} close={()=>p.setModal(null)}>
     <div className="space">
       <div className="reportSections">{opts.map(([k,l])=><label className="check" key={k}><input type="checkbox" checked={sec[k]} onChange={e=>setSec({...sec,[k]:e.target.checked})}/>{l}</label>)}</div>
@@ -331,15 +362,23 @@ export function ExamForm(p){const [f,setF]=useState({title:'',date:today(),type:
 export function ExamView(p){const target=p.students.filter(s=>p.exam.groupIds.includes(s.groupId));const stats=examStats(p.data,p.exam.id);const [query,setQuery]=useState('');const list=target.filter(s=>s.name.includes(query)||s.code.includes(query));return <Modal title={`درجات — ${p.exam.title}`} close={()=>p.setModal(null)}><div className="stats"><Stat n={stats.count} l="سجلات"/><Stat n={money(stats.average)} l="متوسط النقاط"/><Stat n={`${Math.round(stats.passRate)}%`} l="نسبة النجاح"/><Stat n={stats.highest} l="أعلى درجة"/></div><Field label="بحث عن طالب"><input className="input" value={query} onChange={e=>setQuery(e.target.value)} placeholder="بحث بالاسم أو ID"/></Field><div className="list">{list.map(s=>{const g=p.data.grades.find(x=>active(x)&&x.examId===p.exam.id&&x.studentId===s.id);return <div className="gradeRow" key={s.id}><div><b>{s.name}</b><small>{s.code}</small></div><Field label={`الدرجة من ${p.exam.maxScore}`}><input className="input gradeInput" inputMode="decimal" type="number" min="0" max={p.exam.maxScore} value={g?.score??''} onChange={e=>p.write('grades',{...(g||{}),id:g?.id||uid2('gr'),examId:p.exam.id,studentId:s.id,score:e.target.value===''?'':Number(e.target.value),maxScore:p.exam.maxScore,academicYearId:p.yearId},'تسجيل درجة')}/></Field></div>})}</div></Modal>}
 
 
-export function BookForm(p){const [f,setF]=useState({title:'',type:p.dict('bookTypes')[0]||'',price:0,cost:0,stock:0,minStock:5,groupIds:[]});return <Modal title="إضافة كتاب" close={()=>p.setModal(null)}><div className="space">
+export function BookForm(p){const [f,setF]=useState({title:'',type:p.dict('bookTypes')[0]||'',price:0,cost:0,pages:0,needsBinding:false,covers:1,stock:0,minStock:5,groupIds:[]});const pc=p.settings.printCosts||{paper:0,binding:0,cover:0,notes:0};const calcCost=()=>{const c=Number(f.pages||0)*Number(pc.paper||0)+(f.needsBinding?Number(pc.binding||0):0)+Number(f.covers||0)*Number(pc.cover||0);setF({...f,cost:Math.round(c*100)/100})};return <Modal title="إضافة كتاب" close={()=>p.setModal(null)}><div className="space">
  <Field label="اسم الكتاب" required><input className="input" value={f.title} onChange={e=>setF({...f,title:e.target.value})} placeholder="مثال: مذكرة الأحياء"/></Field>
  <Field label="نوع الكتاب"><select className="input" value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{p.dict('bookTypes').map(x=><option key={x}>{x}</option>)}</select></Field>
+ <Section title="احتساب تكلفة الطباعة (اختياري)">
+  <div className="row">
+   <Field label="عدد الورق بالمذكرة"><input className="input" type="number" value={f.pages} onChange={e=>setF({...f,pages:e.target.value})} placeholder="0"/></Field>
+   <Field label="عدد الأغلفة"><input className="input" type="number" value={f.covers} onChange={e=>setF({...f,covers:e.target.value})} placeholder="1"/></Field>
+  </div>
+  <label className="check"><input type="checkbox" checked={f.needsBinding} onChange={e=>setF({...f,needsBinding:e.target.checked})}/> يحتاج تجليد/تكعيب</label>
+  <button type="button" className="btn secondary wide" onClick={calcCost}>احتساب التكلفة تلقائيًا من أسعار الإعدادات</button>
+ </Section>
  <div className="row">
   <Field label="سعر البيع"><input className="input" type="number" value={f.price} onChange={e=>setF({...f,price:e.target.value})} placeholder="0"/></Field>
-  <Field label="تكلفة الطباعة"><input className="input" type="number" value={f.cost} onChange={e=>setF({...f,cost:e.target.value})} placeholder="0"/></Field>
+  <Field label="تكلفة الطباعة (تُحسب تلقائيًا أو تُكتب يدويًا)"><input className="input" type="number" value={f.cost} onChange={e=>setF({...f,cost:e.target.value})} placeholder="0"/></Field>
  </div>
  <div className="row">
-  <Field label="الكمية بالمخزون"><input className="input" type="number" value={f.stock} onChange={e=>setF({...f,stock:e.target.value})} placeholder="0"/></Field>
+  <Field label="الكمية بالمخزون (الرصيد الافتتاحي)"><input className="input" type="number" value={f.stock} onChange={e=>setF({...f,stock:e.target.value})} placeholder="0"/></Field>
   <Field label="حد التنبيه عند النقص"><input className="input" type="number" value={f.minStock} onChange={e=>setF({...f,minStock:e.target.value})} placeholder="5"/></Field>
  </div>
  <Field label="المجموعات المرتبطة"><div className="checkList">{p.groups.map(g=><label className="check" key={g.id}><input type="checkbox" checked={f.groupIds.includes(g.id)} onChange={e=>setF({...f,groupIds:e.target.checked?[...f.groupIds,g.id]:f.groupIds.filter(x=>x!==g.id)})}/>{g.name}</label>)}</div></Field>
@@ -351,7 +390,12 @@ export function BookView(p){
  useEffect(()=>{if(p.presetStudentId)p.setPresetStudentId('')},[]);
  const statuses=p.dict('bookStatuses');
  const [status,setStatus]=useState(statuses[0]||'غير مدفوع وغير مستلم');
- const list=p.data.studentBooks.filter(x=>active(x)&&x.bookId===p.book.id);const inventory=bookInventory(p.data,p.book.id);
+ const [movQty,setMovQty]=useState('');
+ const [movType,setMovType]=useState('IN');
+ const [movReason,setMovReason]=useState('');
+ const list=p.data.studentBooks.filter(x=>active(x)&&x.bookId===p.book.id);
+ const movements=(p.data.bookMovements||[]).filter(x=>active(x)&&x.bookId===p.book.id).sort((a,b)=>b.date.localeCompare(a.date));
+ const inv=bookInventory(p.data,p.book.id);
  const save=async()=>{
   if(!sid)return p.notify('اختر الطالب');
   const student=p.studentBy(sid), existing=list.find(x=>x.studentId===sid), amount=Number(p.book.price||0);
@@ -366,5 +410,29 @@ export function BookView(p){
   if(received&&!existing?.status?.includes('مستلم'))await p.write('books',{...p.book,lastMovementAt:new Date().toISOString()},'تحديث حركة مخزون الكتاب');
   p.notify('تم تحديث الكتاب وربطه بالمالية');setSid('');
  };
- return <Modal title={`إدارة الكتاب — ${p.book.title}`} close={()=>p.setModal(null)}><div className="space"><div className="stats"><Stat n={inventory.available} l="المتاح"/><Stat n={inventory.delivered} l="تم التسليم"/><Stat n={inventory.paid} l="مدفوع"/><Stat n={inventory.lowStock?'تنبيه':'جيد'} l="حالة المخزون"/></div><select className="input" value={sid} onChange={e=>setSid(e.target.value)}><option value="">اختر طالبًا</option>{p.students.filter(s=>p.book.groupIds.includes(s.groupId)).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><select className="input" value={status} onChange={e=>setStatus(e.target.value)}>{statuses.map(x=><option key={x}>{x}</option>)}</select><button className="btn wide" onClick={save}>تسجيل / تحديث الكتاب</button><div className="list">{list.map(x=><Row key={x.id} title={p.studentBy(x.studentId)?.name||'—'} sub={`${x.status} • ${fmtDate(x.date)}`}/>)}</div></div></Modal>
+ const addMovement=async()=>{
+  const q=Number(movQty);
+  if(!q||q<=0)return p.notify('أدخل كمية صحيحة');
+  await p.write('bookMovements',{id:uid2('bm'),bookId:p.book.id,type:movType,qty:q,reason:movReason||(movType==='IN'?'طباعة جديدة':'تالف/فقد'),date:today(),academicYearId:p.yearId},movType==='IN'?'إضافة وارد مخزون':'تسجيل منصرف مخزون');
+  setMovQty('');setMovReason('');p.notify('تم تحديث حركة المخزون');
+ };
+ return <Modal title={`إدارة الكتاب — ${p.book.title}`} close={()=>p.setModal(null)}><div className="space">
+ <div className="stats"><Stat n={inv.available} l="المتاح"/><Stat n={inv.delivered} l="تم التسليم"/><Stat n={inv.paid} l="مدفوع"/><Stat n={inv.lowStock?'تنبيه':'جيد'} l="حالة المخزون"/></div>
+ <div className="stats"><Stat n={money(inv.revenue)} l="إيراد الكتاب"/><Stat n={money(inv.cost)} l="تكلفة الكتاب"/><Stat n={money(inv.profit)} l="صافي الربح"/><Stat n={inv.stock} l="إجمالي الرصيد"/></div>
+ <Section title="تسليم / تحصيل كتاب لطالب">
+  <select className="input" value={sid} onChange={e=>setSid(e.target.value)}><option value="">اختر طالبًا</option>{p.students.filter(s=>p.book.groupIds.includes(s.groupId)).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>
+  <select className="input" value={status} onChange={e=>setStatus(e.target.value)}>{statuses.map(x=><option key={x}>{x}</option>)}</select>
+  <button className="btn wide" onClick={save}>تسجيل / تحديث الكتاب</button>
+ </Section>
+ <Section title="حركة المخزون (وارد / منصرف)">
+  <div className="row">
+   <Field label="نوع الحركة"><select className="input" value={movType} onChange={e=>setMovType(e.target.value)}><option value="IN">وارد (طباعة جديدة)</option><option value="OUT">منصرف (تالف/فقد)</option></select></Field>
+   <Field label="الكمية"><input className="input" type="number" value={movQty} onChange={e=>setMovQty(e.target.value)} placeholder="0"/></Field>
+  </div>
+  <Field label="السبب/ملاحظة"><input className="input" value={movReason} onChange={e=>setMovReason(e.target.value)} placeholder="مثال: تشغيلة طباعة جديدة"/></Field>
+  <button className="btn secondary wide" onClick={addMovement}>تسجيل الحركة</button>
+  <div className="list">{movements.map(m=><Row key={m.id} title={`${m.type==='IN'?'وارد':'منصرف'} — ${m.qty}`} sub={`${fmtDate(m.date)} • ${m.reason||''}`}/>)}</div>
+ </Section>
+ <Section title="سجل تسليم الطلاب"><div className="list">{list.map(x=><Row key={x.id} title={p.studentBy(x.studentId)?.name||'—'} sub={`${x.status} • ${fmtDate(x.date)}`}/>)}</div></Section>
+ </div></Modal>
 }
