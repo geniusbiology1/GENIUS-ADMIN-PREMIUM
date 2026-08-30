@@ -11,7 +11,7 @@ import { derivePin } from '../services/security.js';
 import { useAutoLock } from '../hooks/useAutoLock.js';
 import { syncRuleNotifications } from '../services/notifications/index.js';
 import { defaultData } from '../seed.js';
-import { Login, Dashboard, Students, Groups, Books, Schedule, daySessions, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
+import { Login, Dashboard, Students, Groups, Books, Schedule, AttendanceModal, Scanner, Student360, ReportForm, StudentCard, StudentForm, GroupForm, GroupView, SessionForm, PaymentForm, ExpenseForm, ExamForm, ExamView, BookForm, BookView, Finance, Reports, Notifications, Activity, Settings, PinForm, DriveBackup, YearForm, DictForm, BranchForm, Archive, Calculator, QuickGrades, QuickBooks, QuickSubscriptions } from '../screens/index.js';
 import { Section } from '../components/ui.jsx';
 import '../style.css';
 
@@ -257,21 +257,6 @@ function MainApp(){
      if(rows.length)setData(x=>({...x,notifications:[...(x.notifications||[]),...rows]}));
    }).catch(()=>{});
  },[data,locked,settings.notificationsEnabled]);
-
- useEffect(()=>{
-   if(!data||locked||!settings.notificationsEnabled)return;
-   const rows=daySessions({data,groups,students,groupBy},today()).filter(r=>r.status!=='CANCELLED');
-   const items=[];
-   for(const row of rows){
-     const [h,m]=String(row.timeStart||'0:0').split(':').map(Number);
-     const at=new Date();at.setHours(h,(m||0)-5,0,0);
-     if(at.getTime()<=Date.now())continue;
-     let hash=0;const key=`${row.groupId}_${row.date}_${row.timeStart}`;
-     for(let i=0;i<key.length;i++)hash=(hash*31+key.charCodeAt(i))|0;
-     items.push({id:Math.abs(hash)%2147483647,title:'GENIUS ADMIN',body:`حصة ${row.group?.name||groupBy(row.groupId)?.name||''} تبدأ بعد 5 دقائق`,schedule:{at}});
-   }
-   if(items.length)scheduleLocalNotifications(items).catch(()=>{});
- },[data?.sessions,data?.groups,locked,settings.notificationsEnabled,groups,students,groupBy]);
 
  if(!data)return (
    <div className="splash" dir="rtl">
