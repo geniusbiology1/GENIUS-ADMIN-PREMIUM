@@ -17,12 +17,20 @@ export function allocationsFor(data,studentId){
  return (data.paymentAllocations||[]).filter(x=>isActive(x)&&x.studentId===studentId);
 }
 export function financeSummary(data,studentId){
+ const student=(data.students||[]).find(x=>x.id===studentId);
+ const group=student?(data.groups||[]).find(g=>g.id===student.groupId):null;
  const charges=chargesFor(data,studentId).reduce((a,x)=>a+n(x.amount),0);
  const payments=paymentsFor(data,studentId).reduce((a,x)=>a+n(x.amount),0);
  const discounts=(data.payments||[]).filter(x=>isActive(x)&&x.studentId===studentId&&x.type==='DISCOUNT').reduce((a,x)=>a+n(x.amount),0);
  const refunds=(data.payments||[]).filter(x=>isActive(x)&&x.studentId===studentId&&x.type==='REFUND').reduce((a,x)=>a+n(x.amount),0);
  const allocated=allocationsFor(data,studentId).reduce((a,x)=>a+n(x.amount),0);
- return {charges,payments,discounts,refunds,allocated,unallocated:Math.max(0,payments-allocated),balance:Math.max(0,charges-payments-discounts+refunds)};
+ let sessionCharges=0;
+ if(group?.pricingModel==='PER_SESSION'&&student){
+  const unit=calculateDiscount(n(student.price||group.price||0),student.discountType,student.discountValue);
+  const billable=(data.attendance||[]).filter(x=>isActive(x)&&x.studentId===studentId&&x.billable).length;
+  sessionCharges=billable*unit;
+ }
+ return {charges:charges+sessionCharges,payments,discounts,refunds,allocated,unallocated:Math.max(0,payments-allocated),balance:Math.max(0,charges+sessionCharges-payments-discounts+refunds)};
 }
 export function allocatePayment({payment,charges,amounts}){
  if(!payment?.id||payment.type!=='PAYMENT') throw new Error('INVALID_PAYMENT');
