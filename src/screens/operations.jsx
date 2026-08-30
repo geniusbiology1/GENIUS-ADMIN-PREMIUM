@@ -127,6 +127,8 @@ export function Student360(p){
  const payments=profile?.payments||[];
  const books=profile?.books||[];
  const [addExamId,setAddExamId]=useState('');
+ const [editingPaymentId,setEditingPaymentId]=useState(null);
+ const [editDraft,setEditDraft]=useState({});
  const availableExams=p.data.exams.filter(e=>active(e)&&(e.groupIds||[]).includes(s.groupId)&&!grades.some(g=>g.examId===e.id));
  const addGrade=async()=>{
   if(!addExamId)return;
@@ -134,12 +136,12 @@ export function Student360(p){
   await p.write('grades',{id:uid2('gr'),examId:addExamId,studentId:s.id,score:'',maxScore:exam?.maxScore||0,academicYearId:p.yearId},'إضافة درجة من الملف');
   setAddExamId('');
  };
- const editPayment=async x=>{
-  const v=prompt('تعديل المبلغ (بالجنيه)',x.amount);
-  if(v===null)return;
-  const n=Number(v);
+ const startEditPayment=x=>{setEditingPaymentId(x.id);setEditDraft({amount:x.amount,date:x.date||today(),method:x.method||'',note:x.note||''})};
+ const savePayment=async x=>{
+  const n=Number(editDraft.amount);
   if(!n||n<=0)return p.notify('مبلغ غير صحيح');
-  await p.write('payments',{...x,amount:n},'تعديل قيد مالي من الملف');
+  await p.write('payments',{...x,amount:n,date:editDraft.date,method:editDraft.method,note:editDraft.note},'تعديل قيد مالي من الملف');
+  setEditingPaymentId(null);
  };
  const openBook=book=>{if(!book)return;p.setPresetStudentId(s.id);p.setSelected(book);p.setModal('bookView')};
  return <Modal title={`Student 360 — ${s.name}`} close={()=>p.setModal(null)}>
@@ -149,20 +151,32 @@ export function Student360(p){
   <div className="stats"><Stat n={`${p.attendanceRate(s)}%`} l="الحضور"/><Stat n={`${p.avg(s)}%`} l="متوسط الدرجات"/><Stat n={money(p.due(s))} l="المتبقي"/><Stat n={payments.filter(x=>x.type==='PAYMENT').length} l="دفعات"/></div>
   <Section title="بيانات الطالب"><div className="detailGrid"><span>ولي الأمر</span><b>{s.parentName||'—'}</b><span>هاتف الطالب</span><b>{s.studentPhone||'—'}</b><span>هاتف ولي الأمر</span><b>{s.parentPhone||'—'}</b><span>المستوى</span><b>{s.level||'—'}</b><span>ملاحظات</span><b>{s.notes||'—'}</b></div></Section>
 
-  <Section title={`الحضور (${att.length}) — قابل للتعديل`}>
-   <div className="list">{att.slice(-12).reverse().map(a=>{const sess=p.data.sessions.find(x=>x.id===a.sessionId);return <div className="rowItem" key={a.id}><div><b>{sess?fmtDate(sess.date):new Date(a.time||Date.now()).toLocaleDateString('ar-EG')}</b><small>{p.groupBy(sess?.groupId)?.name||''} {sess?.timeStart||''}</small></div><select className="input smallInput" value={a.status} onChange={e=>p.write('attendance',{...a,status:e.target.value,billable:e.target.value!=='غائب'},'تعديل حضور من الملف')}><option>حاضر</option><option>متأخر</option><option>غائب</option></select></div>})}</div>
+  <Section title={`الحضور (${att.length}) — قابل للتعديل والحذف`}>
+   <div className="list">{att.slice(-12).reverse().map(a=>{const sess=p.data.sessions.find(x=>x.id===a.sessionId);return <div className="rowItem" key={a.id}><div><b>{sess?fmtDate(sess.date):new Date(a.time||Date.now()).toLocaleDateString('ar-EG')}</b><small>{p.groupBy(sess?.groupId)?.name||''} {sess?.timeStart||''}</small></div><div className="attendanceActions"><select className="input smallInput" value={a.status} onChange={e=>p.write('attendance',{...a,status:e.target.value,billable:e.target.value!=='غائب'},'تعديل حضور من الملف')}><option>حاضر</option><option>متأخر</option><option>غائب</option></select><button className="danger" onClick={()=>p.softDelete('attendance',a.id,'حذف سجل حضور من الملف')}>حذف</button></div></div>})}</div>
    {!att.length&&<Empty text="لا يوجد سجل حضور بعد"/>}
   </Section>
 
-  <Section title={`الدرجات (${grades.length}) — قابلة للتعديل`}>
-   <div className="list">{grades.map(g=><div className="gradeRow" key={g.id}><div><b>{p.data.exams.find(e=>e.id===g.examId)?.title||'امتحان'}</b><small>من {g.maxScore}</small></div><input className="input gradeInput" inputMode="decimal" type="number" min="0" max={g.maxScore} value={g.score??''} onChange={e=>p.write('grades',{...g,score:e.target.value===''?'':Number(e.target.value)},'تعديل درجة من الملف')}/></div>)}</div>
+  <Section title={`الدرجات (${grades.length}) — قابلة للتعديل والحذف`}>
+   <div className="list">{grades.map(g=><div className="gradeRow" key={g.id}><div><b>{p.data.exams.find(e=>e.id===g.examId)?.title||'امتحان'}</b><small>من {g.maxScore}</small></div><div className="attendanceActions"><input className="input gradeInput" inputMode="decimal" type="number" min="0" max={g.maxScore} value={g.score??''} onChange={e=>p.write('grades',{...g,score:e.target.value===''?'':Number(e.target.value)},'تعديل درجة من الملف')}/><button className="danger" onClick={()=>p.softDelete('grades',g.id,'حذف درجة من الملف')}>حذف</button></div></div>)}</div>
    {!grades.length&&<Empty text="لا توجد درجات بعد"/>}
    {availableExams.length>0&&<div className="row"><select className="input" value={addExamId} onChange={e=>setAddExamId(e.target.value)}><option value="">+ اختر امتحانًا لإضافة درجة</option>{availableExams.map(e=><option key={e.id} value={e.id}>{e.title}</option>)}</select><button className="btn secondary" onClick={addGrade}>إضافة</button></div>}
   </Section>
 
-  <Section title={`المالية (${payments.length})`}>
+  <Section title={`المالية (${payments.length}) — تحكم كامل`}>
    <div className="actions"><button className="btn" onClick={()=>p.setModal('payment')}><I.Banknote size={16}/> تسجيل دفعة جديدة</button></div>
-   <div className="list">{payments.map(x=><div className="rowItem" key={x.id}><div><b>{x.type==='CHARGE'?'مستحق':'دفعة'} — {money(x.amount)}</b><small>{fmtDate(x.date)} • {x.note||x.method||''}</small></div><div className="actions"><button className="btn secondary" onClick={()=>editPayment(x)}>تعديل</button><button className="danger" onClick={()=>p.softDelete('payments',x.id,'حذف قيد مالي من الملف')}>حذف</button></div></div>)}</div>
+   <div className="list">{payments.map(x=>editingPaymentId===x.id?(
+    <div className="card" key={x.id}>
+     <div className="row">
+      <Field label="المبلغ"><input className="input" type="number" value={editDraft.amount} onChange={e=>setEditDraft({...editDraft,amount:e.target.value})}/></Field>
+      <Field label="التاريخ"><input className="input" type="date" value={editDraft.date} onChange={e=>setEditDraft({...editDraft,date:e.target.value})}/></Field>
+     </div>
+     <Field label="طريقة الدفع"><select className="input" value={editDraft.method} onChange={e=>setEditDraft({...editDraft,method:e.target.value})}><option value="">—</option>{p.dict('paymentMethods').map(m=><option key={m}>{m}</option>)}</select></Field>
+     <Field label="ملاحظة"><input className="input" value={editDraft.note} onChange={e=>setEditDraft({...editDraft,note:e.target.value})}/></Field>
+     <div className="actions"><button className="btn" onClick={()=>savePayment(x)}>حفظ</button><button className="btn secondary" onClick={()=>setEditingPaymentId(null)}>إلغاء</button></div>
+    </div>
+   ):(
+    <div className="rowItem" key={x.id}><div><b>{x.type==='CHARGE'?'مستحق':'دفعة'} — {money(x.amount)}</b><small>{fmtDate(x.date)} • {x.note||x.method||''}</small></div><div className="actions"><button className="btn secondary" onClick={()=>startEditPayment(x)}>تعديل</button><button className="danger" onClick={()=>p.softDelete('payments',x.id,'حذف قيد مالي من الملف')}>حذف</button></div></div>
+   ))}</div>
    {!payments.length&&<Empty text="لا يوجد سجل مالي بعد"/>}
   </Section>
 
@@ -186,14 +200,18 @@ export function ReportForm(p){
   const s=p.selected;const profile=buildStudent360(p.data,s.id);
   const [sec,setSec]=useState({level:true,attendance:true,grades:true,finance:true,books:false,recitation:false});
   const [text,setText]=useState('');
+  const fillTpl=t=>t.replace(/\{name\}/g,s.name).replace(/\{code\}/g,s.code).replace(/\{group\}/g,p.groupBy(s.groupId)?.name||'—');
   const build=useCallback(()=>{
-    const lines=[`GENIUS BIOLOGY — تقرير الطالب`,`الاسم: ${s.name}`,`GENIUS ID: ${s.code}`,`المجموعة: ${p.groupBy(s.groupId)?.name||'—'}`];
+    const introTpl=p.settings.reportIntro||'GENIUS BIOLOGY — تقرير الطالب\nالاسم: {name}\nGENIUS ID: {code}\nالمجموعة: {group}';
+    const outroTpl=p.settings.reportOutro||'';
+    const lines=[fillTpl(introTpl)];
     if(sec.level)lines.push(`المستوى: ${s.level||'—'}`);
     if(sec.attendance){const att=(profile.attendance||[]).slice(-5).reverse();lines.push(`نسبة الحضور: ${p.attendanceRate(s)}%`,`آخر الحضور: ${att.length?att.map(a=>`${a.status} (${fmtDate(a.date)})`).join('، '):'—'}`)}
     if(sec.grades){const gr=(profile.grades||[]).slice(-5).reverse();lines.push(`متوسط الدرجات: ${p.avg(s)}%`,`آخر الامتحانات: ${gr.length?gr.map(g=>`${p.data.exams.find(e=>e.id===g.examId)?.title||'امتحان'}: ${g.score}/${g.maxScore}`).join('، '):'—'}`)}
     if(sec.finance){const pay=(profile.payments||[]).filter(x=>x.type==='PAYMENT').slice(-5).reverse();lines.push(`المتبقي: ${money(p.due(s))}`,`آخر الدفعات: ${pay.length?pay.map(x=>`${money(x.amount)} (${fmtDate(x.date)})`).join('، '):'—'}`)}
     if(sec.books){const bk=profile.books||[];lines.push(`الكتب: ${bk.length?bk.map(x=>`${p.data.books.find(b=>b.id===x.bookId)?.title||'كتاب'} — ${x.status}`).join('، '):'—'}`)}
     if(sec.recitation){const rec=(p.data.recitations||[]).filter(x=>active(x)&&x.studentId===s.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);lines.push(`آخر التسميع: ${rec.length?rec.map(r=>`${r.level||'—'} (${fmtDate(r.date)})`).join('، '):'—'}`)}
+    if(outroTpl)lines.push(fillTpl(outroTpl));
     return lines.join('\n');
   },[s,p,profile,sec]);
   useEffect(()=>{setText(build())},[sec]);
@@ -204,6 +222,7 @@ export function ReportForm(p){
       <Field label="نص الرسالة (قابل للتعديل قبل الإرسال)">
         <textarea className="input textarea reportPreview" value={text} onChange={e=>setText(e.target.value)}/>
       </Field>
+      <p className="hint">المقدمة والخاتمة تُضبط مرة واحدة من الإعدادات → "صيغة التقرير" وتتطبق تلقائيًا على كل الطلاب.</p>
       <div className="actions">
         <button className="btn" onClick={()=>p.whatsapp(s.parentPhone,text)}><I.MessageCircle size={16}/> إرسال واتساب</button>
         <button className="btn secondary" onClick={()=>{navigator.clipboard?.writeText(text);p.notify('تم نسخ التقرير')}}>نسخ</button>
