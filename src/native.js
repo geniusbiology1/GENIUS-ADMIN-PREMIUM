@@ -16,6 +16,11 @@ export async function writeTextFile(fileName,text){const p=await native();if(!p.
 export async function shareFile(uri,title='GENIUS ADMIN Backup'){const p=await native();if(p.share?.Share)return p.share.Share.share({title,files:[uri]});throw new Error('SHARE_UNAVAILABLE')}
 export async function configureNative(){const p=await native();try{await p.statusBar?.StatusBar?.setOverlaysWebView({overlay:true})}catch{}try{await p.keyboard?.Keyboard?.setAccessoryBarVisible({isVisible:false})}catch{} }
 
+export async function requestAllPermissions(){
+  try{const {requestCamera}=await import('./services/scanner/nativeScanner.js');await requestCamera()}catch{}
+  try{const p=await native();await p.notifications?.LocalNotifications?.requestPermissions()}catch{}
+}
+
 export async function scanBarcode(){const m=await import('./services/scanner/nativeScanner');return m.scanGENIUSID()}
 
 export async function shareImageDataUrl(dataUrl,fileName='GENIUS_ID.png',title='GENIUS ADMIN'){
